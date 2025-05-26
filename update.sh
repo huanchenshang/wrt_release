@@ -741,7 +741,6 @@ main() {
     reset_feeds_conf
     update_feeds
     remove_unwanted_packages
-    update_homeproxy
     fix_default_set
     fix_miniupnpd
     update_golang
