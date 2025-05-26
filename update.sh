@@ -481,16 +481,6 @@ fix_compile_coremark() {
     fi
 }
 
-update_homeproxy() {
-    local repo_url="https://github.com/immortalwrt/homeproxy.git"
-    local target_dir="$BUILD_DIR/feeds/small8/luci-app-homeproxy"
-
-    if [ -d "$target_dir" ]; then
-        rm -rf "$target_dir"
-        git clone --depth 1 "$repo_url" "$target_dir"
-    fi
-}
-
 update_dnsmasq_conf() {
     local file="$BUILD_DIR/package/network/services/dnsmasq/files/dhcp.conf"
     if [ -d "$(dirname "$file")" ] && [ -f "$file" ]; then
