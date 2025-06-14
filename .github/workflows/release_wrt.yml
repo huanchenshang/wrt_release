@@ -69,7 +69,7 @@ jobs:
 
       - name: Custom Settings
         run: |
-          . $GITHUB_WORKSPACE/Scripts/function.sh
+          . $GITHUB_WORKSPACE/function.sh
           cd ./wrt/
           generate_config && cat .config
           make defconfig -j$(nproc) && make clean -j$(nproc)
