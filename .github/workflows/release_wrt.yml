@@ -77,6 +77,13 @@ jobs:
           restore-keys: |
             ${{ inputs.runs-on }}-${{ hashFiles('**/repo_flag') }}-
 
+      - name: Custom Settings
+        run: |
+          . $GITHUB_WORKSPACE/Scripts/function.sh
+          cd ./wrt/
+          generate_config && cat .config
+          make defconfig -j$(nproc) && make clean -j$(nproc)
+      
       - name: Refresh the cache
         run: |
           if [ -d "./action_build/staging_dir" ]; then
