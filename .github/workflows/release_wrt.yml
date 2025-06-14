@@ -67,6 +67,13 @@ jobs:
       - name: Pre Clone
         run: ./pre_clone_action.sh ${{ inputs.model }}
 
+      - name: Custom Settings
+        run: |
+          . $GITHUB_WORKSPACE/Scripts/function.sh
+          cd ./wrt/
+          generate_config && cat .config
+          make defconfig -j$(nproc) && make clean -j$(nproc)
+
       - name: Cache Dependencies
         uses: actions/cache@v4
         with:
@@ -76,13 +83,6 @@ jobs:
           key: ${{ inputs.runs-on }}-${{ hashFiles('**/repo_flag') }}-${{ env.BUILD_DATE }}
           restore-keys: |
             ${{ inputs.runs-on }}-${{ hashFiles('**/repo_flag') }}-
-
-      - name: Custom Settings
-        run: |
-          . $GITHUB_WORKSPACE/Scripts/function.sh
-          cd ./wrt/
-          generate_config && cat .config
-          make defconfig -j$(nproc) && make clean -j$(nproc)
       
       - name: Refresh the cache
         run: |
