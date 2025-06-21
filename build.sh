@@ -79,6 +79,20 @@ EOF
     fi
 }
 
+# ... 其他函数定义 ...
+function kernel_version() {
+  local makefile="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/Makefile"
+  if [[ -f "$makefile" ]]; then
+    echo $(sed -n 's/^KERNEL_PATCHVER:=\(.*\)/\1/p' "$makefile")
+  else
+    echo "Error: $makefile not found" >&2
+    return 1
+  fi
+}
+
+# ... 在构建流程开始时 ...
+echo "Building firmware with kernel version: $(kernel_version)"
+
 set_kernel_size() {
     local image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
     if [[ -f $image_file ]]; then
