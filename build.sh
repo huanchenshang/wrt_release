@@ -90,7 +90,14 @@ if [[ -d $BASE_PATH/action_build ]]; then
 fi
 
 $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH"
-
+# 清理 v2ray-geodata 和 dae* 包
+FEEDS_NET_DIR="$BASE_PATH/$BUILD_DIR/feeds/packages/net"
+if [[ -d "$FEEDS_NET_DIR" ]]; then
+    rm -rf "$FEEDS_NET_DIR/{v2ray-geodata}"
+    echo "Removed v2ray-geodata from $FEEDS_NET_DIR"
+else
+    echo "Directory $FEEDS_NET_DIR not found, skipping removal"
+fi
 \cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
 
 cd "$BASE_PATH/$BUILD_DIR"
