@@ -46,14 +46,6 @@ CONFIG_DEBUG_INFO=y
 CONFIG_DEBUG_INFO_BTF=y
 CONFIG_KPROBE_EVENTS=y
 CONFIG_BPF_EVENTS=y
-CONFIG_SCHED_CLASS_EXT=y
-CONFIG_PROBE_EVENTS_BTF_ARGS=y
-CONFIG_IMX_SCMI_MISC_DRV=y
-CONFIG_ARM64_CONTPTE=y
-CONFIG_TRANSPARENT_HUGEPAGE=y
-CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=y
-# CONFIG_TRANSPARENT_HUGEPAGE_MADVISE is not set
-# CONFIG_TRANSPARENT_HUGEPAGE_NEVER is not set
 EOF
         echo "Appended kernel config to $config_file"
     fi
@@ -63,7 +55,6 @@ cat_ebpf_config() {
     local config_file=$1
     if [[ -f $config_file ]]; then
         cat >> "$config_file" <<EOF
-# eBPF
 CONFIG_DEVEL=y
 CONFIG_KERNEL_DEBUG_INFO=y
 CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
@@ -79,28 +70,10 @@ EOF
     fi
 }
 
-# ... 其他函数定义 ...
-function kernel_version() {
-  local makefile="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/Makefile"
-  if [[ -f "$makefile" ]]; then
-    echo $(sed -n 's/^KERNEL_PATCHVER:=\(.*\)/\1/p' "$makefile")
-  else
-    echo "Error: $makefile not found" >&2
-    return 1
-  fi
-}
-
-# ... 在构建流程开始时 ...
-echo "Building firmware with kernel version: $(kernel_version)"
-
 set_kernel_size() {
     local image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
     if [[ -f $image_file ]]; then
         sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
-        sed -i "/^define Device\/jdcloud_re-cs-02/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
-        sed -i "/^define Device\/jdcloud_re-cs-07/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
-        sed -i "/^define Device\/redmi_ax5-jdcloud/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
-        sed -i "/^define Device\/linksys_mr/,/^endef/ { /KERNEL_SIZE := 8192k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
         echo "Updated kernel size in $image_file"
     fi
 }
