@@ -26,6 +26,68 @@ read_ini_by_key() {
     awk -F"=" -v key="$key" '$1 == key {print $2}' "$INI_FILE"
 }
 
+# 添加内核配置以支持 dae
+cat_kernel_config() {
+  if [ -f $1 ]; then
+    cat >> $1 <<EOF
+CONFIG_BPF=y
+CONFIG_BPF_SYSCALL=y
+CONFIG_BPF_JIT=y
+CONFIG_CGROUPS=y
+CONFIG_KPROBES=y
+CONFIG_NET_INGRESS=y
+CONFIG_NET_EGRESS=y
+CONFIG_NET_SCH_INGRESS=m
+CONFIG_NET_CLS_BPF=m
+CONFIG_NET_CLS_ACT=y
+CONFIG_BPF_STREAM_PARSER=y
+CONFIG_DEBUG_INFO=y
+# CONFIG_DEBUG_INFO_REDUCED is not set
+CONFIG_DEBUG_INFO_BTF=y
+CONFIG_KPROBE_EVENTS=y
+CONFIG_BPF_EVENTS=y
+CONFIG_SCHED_CLASS_EXT=y
+CONFIG_PROBE_EVENTS_BTF_ARGS=y
+CONFIG_IMX_SCMI_MISC_DRV=y
+CONFIG_ARM64_CONTPTE=y
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=y
+# CONFIG_TRANSPARENT_HUGEPAGE_MADVISE is not set
+# CONFIG_TRANSPARENT_HUGEPAGE_NEVER is not set
+EOF
+    echo "cat_kernel_config to $1 done"
+  fi
+}
+
+# 添加 eBPF 配置到 .config
+cat_ebpf_config() {
+  cat >> $1 <<EOF
+#eBPF
+CONFIG_DEVEL=y
+CONFIG_KERNEL_DEBUG_INFO=y
+CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
+CONFIG_KERNEL_DEBUG_INFO_BTF=y
+CONFIG_KERNEL_CGROUPS=y
+CONFIG_KERNEL_CGROUP_BPF=y
+CONFIG_KERNEL_BPF_EVENTS=y
+CONFIG_BPF_TOOLCHAIN_HOST=y
+CONFIG_KERNEL_XDP_SOCKETS=y
+CONFIG_PACKAGE_kmod-xdp-sockets-diag=y
+EOF
+    echo "cat_ebpf_config to $1 done"
+}
+
+# 修改内核大小
+set_kernel_size() {
+  image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
+  if [ -f "$image_file" ]; then
+    sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
+    echo "Kernel size updated in $image_file"
+  else
+    echo "Image file $image_file not found, skipping kernel size update"
+  fi
+}
+
 REPO_URL=$(read_ini_by_key "REPO_URL")
 REPO_BRANCH=$(read_ini_by_key "REPO_BRANCH")
 REPO_BRANCH=${REPO_BRANCH:-main}
@@ -46,7 +108,21 @@ if [[ -d "$FEEDS_NET_DIR" ]]; then
 else
     echo "Directory $FEEDS_NET_DIR not found, skipping removal"
 fi
+
+# 修改内核大小
+set_kernel_size
+
+# 复制配置文件
 \cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
+
+# 添加 eBPF 配置
+cat_ebpf_config "$BASE_PATH/$BUILD_DIR/.config"
+
+# 添加内核配置（根据目标架构）
+if grep -qE "^CONFIG_TARGET_qualcommax=y" "$CONFIG_FILE"; then
+    TARGET=$(grep -E "^CONFIG_TARGET_.*_.*=y" "$CONFIG_FILE" | cut -d'_' -f3 | cut -d'=' -f1)
+    cat_kernel_config "$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/$TARGET/config-default"
+fi
 
 cd "$BASE_PATH/$BUILD_DIR"
 make defconfig
