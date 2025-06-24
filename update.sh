@@ -774,6 +774,24 @@ update_smartdns_luci() {
     fi
 }
 
+
+fix_nginx_ssl() {
+    local nginx_conf_dir="$BUILD_DIR/files/etc/nginx/conf.d"
+    mkdir -p "$nginx_conf_dir"
+    # 只生成 http 配置，不生成证书
+    cat >"$nginx_conf_dir/luci_http.conf" <<EOF
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        ubus_interpreter;
+        include uwsgi_params;
+    }
+}
+EOF
+}
+
 main() {
     clone_repo
     clean_up
@@ -818,6 +836,7 @@ main() {
     update_smartdns_luci
     install_feeds
     support_fw4_adg
+    fix_nginx_ssl
     update_script_priority
     fix_easytier
     update_package "runc" "releases" "v1.2.6"
