@@ -827,8 +827,14 @@ EOF
 
 install_update_geodata_script() {
     local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
+    local src_file="$BASE_PATH/patches/update_geodata.sh"
     mkdir -p "$dst_dir"
-    install -m 755 "$BASE_PATH/patches/update_geodata.sh" "$dst_dir/update_geodata.sh"
+    if [ -f "$src_file" ]; then
+        install -m 755 "$src_file" "$dst_dir/update_geodata.sh"
+    else
+        echo "Warning: $src_file not found, skip install_update_geodata_script"
+        return 0
+    fi
 
     # 添加定时任务脚本到uci-defaults，确保首次启动自动写入crontab
     local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
