@@ -24,7 +24,7 @@ FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
 GOLANG_BRANCH="24.x"
 THEME_SET="argon"
-LAN_ADDR="192.168.1.1"
+LAN_ADDR="192.168.10.1"
 
 clone_repo() {
     if [[ ! -d $BUILD_DIR ]]; then
@@ -163,7 +163,7 @@ install_small8() {
         luci-app-passwall smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
         luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
-        luci-theme-argon netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
+        luci-theme-argon luci-app-argon-config netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
         luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
         easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd
 }
@@ -752,7 +752,7 @@ fix_easytier() {
 }
 
 update_geoip() {
-    local geodata_path="$BUILD_DIR/package/feeds/small8/v2ray-geodata/Makefile"
+    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
     if [ -d "${geodata_path%/*}" ] && [ -f "$geodata_path" ]; then
         # 使用自定义 GEOIP_URL
         local GEOIP_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
@@ -767,7 +767,7 @@ update_geoip() {
 }
 
 update_geosite() {
-    local geodata_path="$BUILD_DIR/package/feeds/small8/v2ray-geodata/Makefile"
+    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
     if [ -d "${geodata_path%/*}" ] && [ -f "$geodata_path" ]; then
         # 使用自定义 GEOSITE_URL
         local GEOSITE_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
@@ -811,6 +811,23 @@ update_smartdns_luci() {
 fix_nginx_ssl() {
     local nginx_conf_dir="$BUILD_DIR/files/etc/nginx/conf.d"
     mkdir -p "$nginx_conf_dir"
+    # 删除所有 https 配置，确保只用 http
+    find "$nginx_conf_dir" -type f -name '*https*.conf' -delete 2>/dev/null
+
+    # 删除 uhttpd 配置和启动脚本，防止其监听 443
+    rm -f "$BUILD_DIR/files/etc/config/uhttpd"
+    rm -f "$BUILD_DIR/files/etc/init.d/uhttpd"
+
+    # 强制在最终根文件系统中删除 uhttpd 配置和启动脚本
+    mkdir -p "$BUILD_DIR/package/base-files/files/etc/config"
+    mkdir -p "$BUILD_DIR/package/base-files/files/etc/init.d"
+    rm -f "$BUILD_DIR/package/base-files/files/etc/config/uhttpd"
+    rm -f "$BUILD_DIR/package/base-files/files/etc/init.d/uhttpd"
+
+    # 防止 uhttpd 证书文件被自动生成
+    rm -f "$BUILD_DIR/package/base-files/files/etc/uhttpd.crt"
+    rm -f "$BUILD_DIR/package/base-files/files/etc/uhttpd.key"
+
     # 只生成 http 配置，不生成证书
     cat >"$nginx_conf_dir/luci_http.conf" <<EOF
 server {
