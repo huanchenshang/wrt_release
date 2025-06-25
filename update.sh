@@ -167,7 +167,7 @@ update_golang() {
 # 安装small8源的包
 install_small8() {
     ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
-        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin \
+        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geoview v2ray-plugin \
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
         luci-app-passwall smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
@@ -344,9 +344,6 @@ update_ath11k_fw() {
 # 修正部分包的Makefile格式
 fix_mkpkg_format_invalid() {
     if [[ $BUILD_DIR =~ "imm-nss" ]]; then
-        if [ -f $BUILD_DIR/feeds/small8/v2ray-geodata/Makefile ]; then
-            sed -i 's/VER)-\$(PKG_RELEASE)/VER)-r\$(PKG_RELEASE)/g' $BUILD_DIR/feeds/small8/v2ray-geodata/Makefile
-        fi
         if [ -f $BUILD_DIR/feeds/small8/luci-lib-taskd/Makefile ]; then
             sed -i 's/>=1\.0\.3-1/>=1\.0\.3-r1/g' $BUILD_DIR/feeds/small8/luci-lib-taskd/Makefile
         fi
@@ -802,38 +799,6 @@ fix_easytier() {
     fi
 }
 
-# 更新geoip下载地址
-update_geoip() {
-    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
-    if [ -d "${geodata_path%/*}" ] && [ -f "$geodata_path" ]; then
-        # 使用自定义 GEOIP_URL
-        local GEOIP_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
-        local old_file=$(awk -F"=" '/GEOIP_URL:=/ {print $2}' $geodata_path | tr -d ' ')
-        if [ -n "$old_file" ]; then
-            sed -i "s|GEOIP_URL:=.*|GEOIP_URL:=$GEOIP_URL|g" "$geodata_path"
-        else
-            echo "GEOIP_URL:=$GEOIP_URL" >> "$geodata_path"
-        fi
-        # 可选：如需校验和，可自行下载 geoip.dat 并计算 sha256sum，再替换 PKG_HASH
-    fi
-}
-
-# 更新geosite下载地址
-update_geosite() {
-    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
-    if [ -d "${geodata_path%/*}" ] && [ -f "$geodata_path" ]; then
-        # 使用自定义 GEOSITE_URL
-        local GEOSITE_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
-        local old_file=$(awk -F"=" '/GEOSITE_URL:=/ {print $2}' $geodata_path | tr -d ' ')
-        if [ -n "$old_file" ]; then
-            sed -i "s|GEOSITE_URL:=.*|GEOSITE_URL:=$GEOSITE_URL|g" "$geodata_path"
-        else
-            echo "GEOSITE_URL:=$GEOSITE_URL" >> "$geodata_path"
-        fi
-        # 可选：如需校验和，可自行下载 geosite.dat 并计算 sha256sum，再替换 PKG_HASH
-    fi
-}
-
 # lucky本地化处理
 update_lucky() {
     local version=$(find "$BASE_PATH/patches" -name "lucky*" -printf "%f\n" | head -n 1 | awk -F'_' '{print $2}')
@@ -898,30 +863,6 @@ server {
 EOF
 }
 
-# 更新geodata脚本
-install_update_geodata_script() {
-    local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
-    local src_file="$BASE_PATH/patches/update_geodata.sh"
-    mkdir -p "$dst_dir"
-    if [ -f "$src_file" ]; then
-        install -m 755 "$src_file" "$dst_dir/update_geodata.sh"
-    else
-        echo "Warning: $src_file not found, skip install_update_geodata_script"
-        return 0
-    fi
-
-    # 添加定时任务脚本到uci-defaults，确保首次启动自动写入crontab
-    local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
-    mkdir -p "$uci_defaults_dir"
-    cat >"$uci_defaults_dir/99-geodata-cron" <<'EOF'
-#!/bin/sh
-CRON_FILE="/etc/crontabs/root"
-CMD="3 3 * * * /usr/bin/update_geodata.sh >/dev/null 2>&1"
-grep -F "$CMD" "$CRON_FILE" >/dev/null 2>&1 || echo "$CMD" >>"$CRON_FILE"
-EOF
-    chmod +x "$uci_defaults_dir/99-geodata-cron"
-}
-
 # 主流程入口
 main() {
     clone_repo
@@ -970,9 +911,6 @@ main() {
     fix_nginx_ssl
     update_script_priority
     fix_easytier
-    update_geoip
-    update_geosite
-    install_update_geodata_script
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
     update_package "docker" "tags" "v28.2.2"
