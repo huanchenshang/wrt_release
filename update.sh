@@ -835,19 +835,25 @@ fix_nginx_ssl() {
     # 删除所有 https 配置，确保只用 http
     find "$nginx_conf_dir" -type f -name '*https*.conf' -delete 2>/dev/null
 
+    # 删除 nginx 默认 https 配置和 ssl 证书生成脚本
+    rm -f "$BUILD_DIR/files/etc/nginx/conf.d/ssl.conf"
+    rm -f "$BUILD_DIR/files/etc/nginx/conf.d/luci_https.conf"
+    rm -f "$BUILD_DIR/package/base-files/files/etc/nginx/conf.d/ssl.conf"
+    rm -f "$BUILD_DIR/package/base-files/files/etc/nginx/conf.d/luci_https.conf"
+    rm -f "$BUILD_DIR/files/etc/nginx/ssl/*"
+    rm -f "$BUILD_DIR/package/base-files/files/etc/nginx/ssl/*"
+
     # 删除 uhttpd 配置和启动脚本，防止其监听 443
     rm -f "$BUILD_DIR/files/etc/config/uhttpd"
     rm -f "$BUILD_DIR/files/etc/init.d/uhttpd"
-
-    # 强制在最终根文件系统中删除 uhttpd 配置和启动脚本
-    mkdir -p "$BUILD_DIR/package/base-files/files/etc/config"
-    mkdir -p "$BUILD_DIR/package/base-files/files/etc/init.d"
     rm -f "$BUILD_DIR/package/base-files/files/etc/config/uhttpd"
     rm -f "$BUILD_DIR/package/base-files/files/etc/init.d/uhttpd"
 
     # 防止 uhttpd 证书文件被自动生成
     rm -f "$BUILD_DIR/package/base-files/files/etc/uhttpd.crt"
     rm -f "$BUILD_DIR/package/base-files/files/etc/uhttpd.key"
+    rm -f "$BUILD_DIR/files/etc/uhttpd.crt"
+    rm -f "$BUILD_DIR/files/etc/uhttpd.key"
 
     # 只生成 http 配置，不生成证书
     cat >"$nginx_conf_dir/luci_http.conf" <<EOF
