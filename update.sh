@@ -167,7 +167,7 @@ update_golang() {
 # 安装small8源的包
 install_small8() {
     ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
-        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geoview v2ray-plugin \
+        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin \
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
         luci-app-passwall smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
@@ -344,6 +344,9 @@ update_ath11k_fw() {
 # 修正部分包的Makefile格式
 fix_mkpkg_format_invalid() {
     if [[ $BUILD_DIR =~ "imm-nss" ]]; then
+        if [ -f $BUILD_DIR/feeds/small8/v2ray-geodata/Makefile ]; then
+            sed -i 's/VER)-\$(PKG_RELEASE)/VER)-r\$(PKG_RELEASE)/g' $BUILD_DIR/feeds/small8/v2ray-geodata/Makefile
+        fi
         if [ -f $BUILD_DIR/feeds/small8/luci-lib-taskd/Makefile ]; then
             sed -i 's/>=1\.0\.3-1/>=1\.0\.3-r1/g' $BUILD_DIR/feeds/small8/luci-lib-taskd/Makefile
         fi
@@ -799,6 +802,30 @@ fix_easytier() {
     fi
 }
 
+# 更新geoip下载地址
+update_geoip() {
+    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
+    local GEOIP_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
+    if [ -f "$geodata_path" ]; then
+        # 替换 geoip 的 URL 行为自定义链接
+        sed -i '/define Download\/geoip/,/^endef/ s|^  URL:=.*|  URL:='${GEOIP_URL}'|' "$geodata_path"
+        # 可选：如想同步 geoip 文件名，可修改 FILE 行
+        # sed -i '/define Download\/geoip/,/^endef/ s|^  FILE:=.*|  FILE:=geoip.dat|' "$geodata_path"
+    fi
+}
+
+# 更新geosite下载地址
+update_geosite() {
+    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
+    local GEOSITE_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+    if [ -f "$geodata_path" ]; then
+        # 替换 geosite 的 URL 行为自定义链接
+        sed -i '/define Download\/geosite/,/^endef/ s|^  URL:=.*|  URL:='${GEOSITE_URL}'|' "$geodata_path"
+        # 可选：如想同步 geosite 文件名，可修改 FILE 行
+        # sed -i '/define Download\/geosite/,/^endef/ s|^  FILE:=.*|  FILE:=geosite.dat|' "$geodata_path"
+    fi
+}
+
 # lucky本地化处理
 update_lucky() {
     local version=$(find "$BASE_PATH/patches" -name "lucky*" -printf "%f\n" | head -n 1 | awk -F'_' '{print $2}')
@@ -828,52 +855,32 @@ update_smartdns_luci() {
     fi
 }
 
-# 修复nginx访问证书问题
-fix_nginx_ssl() {
-    local nginx_conf_dir="$BUILD_DIR/files/etc/nginx/conf.d"
-    mkdir -p "$nginx_conf_dir"
-    # 删除所有 https 配置，确保只用 http
-    find "$nginx_conf_dir" -type f -name '*https*.conf' -delete 2>/dev/null
+# 更新geodata脚本
+install_update_geodata_script() {
+    local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
+    local src_file="$BASE_PATH/patches/update_geodata.sh"
+    mkdir -p "$dst_dir"
+    if [ -f "$src_file" ]; then
+        install -m 755 "$src_file" "$dst_dir/update_geodata.sh"
+    else
+        echo "Warning: $src_file not found, skip install_update_geodata_script"
+        return 0
+    fi
 
-    # 删除 nginx 默认 https 配置和 ssl 证书生成脚本
-    rm -f "$BUILD_DIR/files/etc/nginx/conf.d/ssl.conf"
-    rm -f "$BUILD_DIR/files/etc/nginx/conf.d/luci_https.conf"
-    rm -f "$BUILD_DIR/package/base-files/files/etc/nginx/conf.d/ssl.conf"
-    rm -f "$BUILD_DIR/package/base-files/files/etc/nginx/conf.d/luci_https.conf"
-    rm -f "$BUILD_DIR/files/etc/nginx/ssl/*"
-    rm -f "$BUILD_DIR/package/base-files/files/etc/nginx/ssl/*"
-
-    # 删除 uhttpd 配置和启动脚本，防止其监听 443
-    rm -f "$BUILD_DIR/files/etc/config/uhttpd"
-    rm -f "$BUILD_DIR/files/etc/init.d/uhttpd"
-    rm -f "$BUILD_DIR/package/base-files/files/etc/config/uhttpd"
-    rm -f "$BUILD_DIR/package/base-files/files/etc/init.d/uhttpd"
-
-    # 防止 uhttpd 证书文件被自动生成
-    rm -f "$BUILD_DIR/package/base-files/files/etc/uhttpd.crt"
-    rm -f "$BUILD_DIR/package/base-files/files/etc/uhttpd.key"
-    rm -f "$BUILD_DIR/files/etc/uhttpd.crt"
-    rm -f "$BUILD_DIR/files/etc/uhttpd.key"
-
-    # 只生成 http 配置，不生成证书
-    cat >"$nginx_conf_dir/luci_http.conf" <<EOF
-server {
-    listen 80;
-    server_name _;
-
-    location / {
-        ubus_interpreter;
-        include uwsgi_params;
-    }
-}
+    # 添加定时任务脚本到uci-defaults，确保首次启动自动写入crontab
+    local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
+    mkdir -p "$uci_defaults_dir"
+    cat >"$uci_defaults_dir/99-geodata-cron" <<'EOF'
+#!/bin/sh
+CRON_FILE="/etc/crontabs/root"
+CMD="3 3 * * * /usr/bin/update_geodata.sh >/dev/null 2>&1"
+grep -F "$CMD" "$CRON_FILE" >/dev/null 2>&1 || echo "$CMD" >>"$CRON_FILE"
 EOF
+    chmod +x "$uci_defaults_dir/99-geodata-cron"
 }
 
 # 主流程入口
 main() {
-    # 清理 dl 目录下 geoip/geosite 缓存文件
-    rm -f "$BUILD_DIR/../dl/geoip*.dat" "$BUILD_DIR/../dl/geosite*.dat"
-
     clone_repo
     clean_up
     reset_feeds_conf
@@ -917,9 +924,11 @@ main() {
     update_smartdns_luci
     install_feeds
     support_fw4_adg
-    fix_nginx_ssl
     update_script_priority
     fix_easytier
+    update_geoip
+    update_geosite
+    install_update_geodata_script
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
     update_package "docker" "tags" "v28.2.2"
