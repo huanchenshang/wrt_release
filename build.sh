@@ -100,19 +100,6 @@ if [[ -d $BASE_PATH/action_build ]]; then
 fi
 
 $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH"
-# 清理 v2ray-geodata
-FEEDS_NET_DIR="$BASE_PATH/$BUILD_DIR/feeds/packages/net"
-if [[ -d "$FEEDS_NET_DIR" ]]; then
-    rm -rf "$FEEDS_NET_DIR/v2ray-geodata"
-    echo "Removed v2ray-geodata from $FEEDS_NET_DIR"
-    # 如果本地有 v2ray-geodata，则复制到 feeds/packages/net 下
-    if [[ -d "$BASE_PATH/v2ray-geodata" ]]; then
-        cp -r "$BASE_PATH/v2ray-geodata" "$FEEDS_NET_DIR/"
-        echo "Copied local v2ray-geodata to $FEEDS_NET_DIR"
-    fi
-else
-    echo "Directory $FEEDS_NET_DIR not found, skipping removal"
-fi
 
 # 修改内核大小
 set_kernel_size
