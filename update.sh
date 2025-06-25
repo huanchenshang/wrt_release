@@ -865,6 +865,9 @@ EOF
 
 # 主流程入口
 main() {
+    # 清理 dl 目录下 geoip/geosite 缓存文件
+    rm -f "$BUILD_DIR/../dl/geoip*.dat" "$BUILD_DIR/../dl/geosite*.dat"
+
     clone_repo
     clean_up
     reset_feeds_conf
