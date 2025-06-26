@@ -512,6 +512,21 @@ update_nss_diag() {
     fi
 }
 
+# 替换nginx配置
+replace_nginx_config() {
+    local nginx_conf_dir="$BUILD_DIR/package/network/services/nginx/files"
+    local nginx_conf="$nginx_conf_dir/nginx"
+    local patch_nginx="$BASE_PATH/patches/nginx"
+
+    # 确保目标目录存在
+    mkdir -p "$nginx_conf_dir"
+
+    # 如果 patches/nginx 存在，则复制覆盖
+    if [ -f "$patch_nginx" ]; then
+        install -m 644 "$patch_nginx" "$nginx_conf"
+    fi
+}
+
 # 调整部分菜单位置（如需调整可取消注释）
 update_menu_location() {
     # local samba4_path="$BUILD_DIR/feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/luci-app-samba4.json"
@@ -929,6 +944,7 @@ main() {
     update_geoip
     update_geosite
     install_update_geodata_script
+    replace_nginx_config
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
     update_package "docker" "tags" "v28.2.2"
