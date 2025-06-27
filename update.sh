@@ -102,7 +102,7 @@ remove_unwanted_packages() {
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
         "smartdns" "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
-        "sing-box" "v2ray-core" "v2ray-plugin" "tuic-client"
+        "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
         "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs"
         "shadowsocksr-libev" "mihomo" "geoview" "tailscale" "open-app-filter"
         "msd_lite"
@@ -509,21 +509,6 @@ update_nss_diag() {
     fi
 }
 
-# 替换nginx配置
-replace_nginx_config() {
-    local nginx_conf_dir="$BUILD_DIR/package/network/services/nginx/files"
-    local nginx_conf="$nginx_conf_dir/nginx"
-    local patch_nginx="$BASE_PATH/patches/nginx"
-
-    # 确保目标目录存在
-    mkdir -p "$nginx_conf_dir"
-
-    # 如果 patches/nginx 存在，则复制覆盖
-    if [ -f "$patch_nginx" ]; then
-        install -m 644 "$patch_nginx" "$nginx_conf"
-    fi
-}
-
 # 调整部分菜单位置（如需调整可取消注释）
 update_menu_location() {
     # local samba4_path="$BUILD_DIR/feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/luci-app-samba4.json"
@@ -844,28 +829,28 @@ update_smartdns_luci() {
 }
 
 # 更新geodata脚本
-#install_update_geodata_script() {
-#    local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
- #   local src_file="$BASE_PATH/patches/update_geodata.sh"
-  #  mkdir -p "$dst_dir"
-   # if [ -f "$src_file" ]; then
-    #    install -m 755 "$src_file" "$dst_dir/update_geodata.sh"
-    #else
-     #   echo "Warning: $src_file not found, skip install_update_geodata_script"
-      #  return 0
-    #fi
+install_update_geodata_script() {
+    local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
+    local src_file="$BASE_PATH/patches/v2ray-geodata-updater"
+    mkdir -p "$dst_dir"
+    if [ -f "$src_file" ]; then
+        install -m 755 "$src_file" "$dst_dir/v2ray-geodata-updater"
+    else
+        echo "Warning: $src_file not found, skip install_update_geodata_script"
+        return 0
+    fi
 
     # 添加定时任务脚本到uci-defaults，确保首次启动自动写入crontab
-    #local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
-    #mkdir -p "$uci_defaults_dir"
-    #cat >"$uci_defaults_dir/99-geodata-cron" <<'EOF'
+    local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
+    mkdir -p "$uci_defaults_dir"
+    cat >"$uci_defaults_dir/99-geodata-cron" <<'EOF'
 #!/bin/sh
-#CRON_FILE="/etc/crontabs/root"
-#CMD="3 3 * * * /usr/bin/update_geodata.sh >/dev/null 2>&1"
-#grep -F "$CMD" "$CRON_FILE" >/dev/null 2>&1 || echo "$CMD" >>"$CRON_FILE"
-#EOF
- #   chmod +x "$uci_defaults_dir/99-geodata-cron"
-#}
+CRON_FILE="/etc/crontabs/root"
+CMD="3 3 * * * /usr/bin/v2ray-geodata-updater >/dev/null 2>&1"
+grep -F "$CMD" "$CRON_FILE" >/dev/null 2>&1 || echo "$CMD" >>"$CRON_FILE"
+EOF
+    chmod +x "$uci_defaults_dir/99-geodata-cron"
+}
 
 # 安装仓库目录下的v2ray-geodata
 install_v2ray_geodata() {
@@ -924,7 +909,7 @@ main() {
     support_fw4_adg
     update_script_priority
     fix_easytier
-    #install_update_geodata_script
+    install_update_geodata_script
     replace_nginx_config
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
