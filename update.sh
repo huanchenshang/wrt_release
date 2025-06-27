@@ -102,7 +102,7 @@ remove_unwanted_packages() {
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
         "smartdns" "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
-        "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
+        "sing-box" "v2ray-core" "v2ray-plugin" "tuic-client"
         "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs"
         "shadowsocksr-libev" "mihomo" "geoview" "tailscale" "open-app-filter"
         "msd_lite"
@@ -844,27 +844,37 @@ update_smartdns_luci() {
 }
 
 # 更新geodata脚本
-install_update_geodata_script() {
-    local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
-    local src_file="$BASE_PATH/patches/update_geodata.sh"
-    mkdir -p "$dst_dir"
-    if [ -f "$src_file" ]; then
-        install -m 755 "$src_file" "$dst_dir/update_geodata.sh"
-    else
-        echo "Warning: $src_file not found, skip install_update_geodata_script"
-        return 0
-    fi
+#install_update_geodata_script() {
+#    local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
+ #   local src_file="$BASE_PATH/patches/update_geodata.sh"
+  #  mkdir -p "$dst_dir"
+   # if [ -f "$src_file" ]; then
+    #    install -m 755 "$src_file" "$dst_dir/update_geodata.sh"
+    #else
+     #   echo "Warning: $src_file not found, skip install_update_geodata_script"
+      #  return 0
+    #fi
 
     # 添加定时任务脚本到uci-defaults，确保首次启动自动写入crontab
-    local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
-    mkdir -p "$uci_defaults_dir"
-    cat >"$uci_defaults_dir/99-geodata-cron" <<'EOF'
+    #local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
+    #mkdir -p "$uci_defaults_dir"
+    #cat >"$uci_defaults_dir/99-geodata-cron" <<'EOF'
 #!/bin/sh
-CRON_FILE="/etc/crontabs/root"
-CMD="3 3 * * * /usr/bin/update_geodata.sh >/dev/null 2>&1"
-grep -F "$CMD" "$CRON_FILE" >/dev/null 2>&1 || echo "$CMD" >>"$CRON_FILE"
-EOF
-    chmod +x "$uci_defaults_dir/99-geodata-cron"
+#CRON_FILE="/etc/crontabs/root"
+#CMD="3 3 * * * /usr/bin/update_geodata.sh >/dev/null 2>&1"
+#grep -F "$CMD" "$CRON_FILE" >/dev/null 2>&1 || echo "$CMD" >>"$CRON_FILE"
+#EOF
+ #   chmod +x "$uci_defaults_dir/99-geodata-cron"
+#}
+
+# 安装仓库目录下的v2ray-geodata
+install_v2ray_geodata() {
+    if [ -f "$BUILD_DIR/package/v2ray-geodata/Makefile" ]; then
+        make -C "$BUILD_DIR" package/v2ray-geodata/compile V=s
+        make -C "$BUILD_DIR" package/v2ray-geodata/install V=s
+    else
+        echo "Warning: $BUILD_DIR/package/v2ray-geodata/Makefile not found, skipping installation."
+    fi
 }
 
 # 主流程入口
@@ -914,9 +924,7 @@ main() {
     support_fw4_adg
     update_script_priority
     fix_easytier
-    update_geoip
-    update_geosite
-    install_update_geodata_script
+    #install_update_geodata_script
     replace_nginx_config
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
@@ -925,6 +933,7 @@ main() {
     # update_package "xray-core"
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
+    install_v2ray_geodata
 }
 
 main "$@"
