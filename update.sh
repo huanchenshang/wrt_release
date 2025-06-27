@@ -854,14 +854,14 @@ EOF
 }
 
 # 安装仓库目录下的v2ray-geodata
-#install_v2ray_geodata() {
- #   if [ -f "$BUILD_DIR/package/v2ray-geodata/Makefile" ]; then
-  #      make -C "$BUILD_DIR" package/v2ray-geodata/compile V=s
-   #     make -C "$BUILD_DIR" package/v2ray-geodata/install V=s
-    #else
-     #   echo "Warning: $BUILD_DIR/package/v2ray-geodata/Makefile not found, skipping installation."
-    #fi
-#}
+install_v2ray_geodata() {
+    if [ -f "$BUILD_DIR/package/v2ray-geodata/Makefile" ]; then
+        make -C "$BUILD_DIR" package/v2ray-geodata/compile V=s
+        make -C "$BUILD_DIR" package/v2ray-geodata/install V=s
+    else
+        echo "Warning: $BUILD_DIR/package/v2ray-geodata/Makefile not found, skipping installation."
+    fi
+}
 
 # 主流程入口
 main() {
@@ -918,7 +918,7 @@ main() {
     # update_package "xray-core"
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
-    # install_v2ray_geodata
+    install_v2ray_geodata
 }
 
 main "$@"
