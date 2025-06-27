@@ -102,7 +102,7 @@ remove_unwanted_packages() {
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
         "smartdns" "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
-        "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
+        "sing-box" "v2ray-core" "v2ray-plugin" "tuic-client"
         "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs"
         "shadowsocksr-libev" "mihomo" "geoview" "tailscale" "open-app-filter"
         "msd_lite"
@@ -167,7 +167,7 @@ update_golang() {
 # 安装small8源的包
 install_small8() {
     ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
-        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin \
+        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geoview v2ray-plugin \
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
         luci-app-passwall smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
@@ -344,9 +344,6 @@ update_ath11k_fw() {
 # 修正部分包的Makefile格式
 fix_mkpkg_format_invalid() {
     if [[ $BUILD_DIR =~ "imm-nss" ]]; then
-        if [ -f $BUILD_DIR/feeds/small8/v2ray-geodata/Makefile ]; then
-            sed -i 's/VER)-\$(PKG_RELEASE)/VER)-r\$(PKG_RELEASE)/g' $BUILD_DIR/feeds/small8/v2ray-geodata/Makefile
-        fi
         if [ -f $BUILD_DIR/feeds/small8/luci-lib-taskd/Makefile ]; then
             sed -i 's/>=1\.0\.3-1/>=1\.0\.3-r1/g' $BUILD_DIR/feeds/small8/luci-lib-taskd/Makefile
         fi
@@ -814,30 +811,6 @@ fix_easytier() {
     local easytier_path="$BUILD_DIR/package/feeds/small8/luci-app-easytier/luasrc/model/cbi/easytier.lua"
     if [ -d "${easytier_path%/*}" ] && [ -f "$easytier_path" ]; then
         sed -i 's/util/xml/g' "$easytier_path"
-    fi
-}
-
-# 更新geoip下载地址
-update_geoip() {
-    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
-    local GEOIP_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
-    if [ -f "$geodata_path" ]; then
-        # 替换 geoip 的 URL 行为自定义链接
-        sed -i '/define Download\/geoip/,/^endef/ s|^  URL:=.*|  URL:='${GEOIP_URL}'|' "$geodata_path"
-        # 可选：如想同步 geoip 文件名，可修改 FILE 行
-        # sed -i '/define Download\/geoip/,/^endef/ s|^  FILE:=.*|  FILE:=geoip.dat|' "$geodata_path"
-    fi
-}
-
-# 更新geosite下载地址
-update_geosite() {
-    local geodata_path="$BUILD_DIR/feeds/small8/v2ray-geodata/Makefile"
-    local GEOSITE_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
-    if [ -f "$geodata_path" ]; then
-        # 替换 geosite 的 URL 行为自定义链接
-        sed -i '/define Download\/geosite/,/^endef/ s|^  URL:=.*|  URL:='${GEOSITE_URL}'|' "$geodata_path"
-        # 可选：如想同步 geosite 文件名，可修改 FILE 行
-        # sed -i '/define Download\/geosite/,/^endef/ s|^  FILE:=.*|  FILE:=geosite.dat|' "$geodata_path"
     fi
 }
 
