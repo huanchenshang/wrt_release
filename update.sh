@@ -910,7 +910,6 @@ main() {
     update_script_priority
     fix_easytier
     install_update_geodata_script
-    replace_nginx_config
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
     update_package "docker" "tags" "v28.2.2"
