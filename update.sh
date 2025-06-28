@@ -111,7 +111,7 @@ remove_unwanted_packages() {
         "cups"
     )
     local small8_packages=(
-        "ppp" "firewall" "daed-next" "libnftnl" "nftables" "dnsmasq" "v2ray-geodata"
+        "ppp" "firewall" "daed-next" "libnftnl" "nftables" "dnsmasq"
     )
 
     for pkg in "${luci_packages[@]}"; do
@@ -167,7 +167,7 @@ update_golang() {
 # 安装small8源的包
 install_small8() {
     ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
-        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geoview v2ray-plugin \
+        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin \
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
         luci-app-passwall smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
         adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
@@ -672,15 +672,14 @@ update_mosdns_deconfig() {
     fi
 }
 
-# 修复 quickstart 前端文件
+# 修复 quickstart 温度显示
 fix_quickstart() {
-    local qs_index_path="$BUILD_DIR/feeds/small8/luci-app-quickstart/htdocs/luci-static/quickstart/index.js"
-    local fix_path="$BASE_PATH/patches/quickstart_index.js"
-    # 用补丁覆盖 quickstart 前端文件
-    if [ -f "$qs_index_path" ] && [ -f "$fix_path" ]; then
-        cat "$fix_path" >"$qs_index_path"
-    else
-        echo "Quickstart index.js 或补丁文件不存在，请检查路径是否正确。"
+    local file_path="$BUILD_DIR/feeds/small8/luci-app-quickstart/luasrc/controller/istore_backend.lua"
+    # 下载新的istore_backend.lua文件并覆盖
+    if [ -f "$file_path" ]; then
+        \rm -f "$file_path"
+        curl -L https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua \
+            -o "$file_path"
     fi
 }
 
@@ -853,13 +852,20 @@ EOF
     chmod +x "$uci_defaults_dir/99-geodata-cron"
 }
 
-# 安装仓库目录下的v2ray-geodata
-install_v2ray_geodata() {
-    if [ -f "$BUILD_DIR/package/v2ray-geodata/Makefile" ]; then
-        make -C "$BUILD_DIR" package/v2ray-geodata/compile V=s
-        make -C "$BUILD_DIR" package/v2ray-geodata/install V=s
-    else
-        echo "Warning: $BUILD_DIR/package/v2ray-geodata/Makefile not found, skipping installation."
+# 自定义v2ray-geodata下载
+custom_v2ray_geodata() {
+    local file_path="$BUILD_DIR/feeds/small8/v2ray-geodata"
+    # 下载新的Makefile文件并覆盖
+    if [ -d "$file_path" ]; then
+        \rm -f "$file_path/Makefile"
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/Makefile \
+            -o "$file_path/Makefile"
+        # 下载init.sh文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/init.sh \
+            -o "$file_path/init.sh"
+        # 下载v2ray-geodata-updater文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/v2ray-geodata-updater \
+            -o "$file_path/v2ray-geodata-updater"
     fi
 }
 
@@ -910,7 +916,7 @@ main() {
     support_fw4_adg
     update_script_priority
     fix_easytier
-    install_update_geodata_script
+    # install_update_geodata_script
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
     update_package "docker" "tags" "v28.2.2"
@@ -918,7 +924,7 @@ main() {
     # update_package "xray-core"
     # update_proxy_app_menu_location
     # update_dns_app_menu_location
-    install_v2ray_geodata
+    custom_v2ray_geodata
 }
 
 main "$@"
