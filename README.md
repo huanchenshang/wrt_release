@@ -1,3 +1,7 @@
+开启内核eBPF，支持dae，daed内核级透明代理
+v2ray-geodata使用MetaCubeX的geosite和geoip，分流更精细
+https://github.com/MetaCubeX/meta-rules-dat
+
 首先安装 Linux 系统，推荐 Ubuntu LTS  
 
 安装编译依赖  
