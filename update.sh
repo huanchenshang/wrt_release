@@ -828,30 +828,6 @@ update_smartdns_luci() {
     fi
 }
 
-# 更新geodata脚本
-install_update_geodata_script() {
-    local dst_dir="$BUILD_DIR/package/base-files/files/usr/bin"
-    local src_file="$BASE_PATH/patches/v2ray-geodata-updater"
-    mkdir -p "$dst_dir"
-    if [ -f "$src_file" ]; then
-        install -m 755 "$src_file" "$dst_dir/v2ray-geodata-updater"
-    else
-        echo "Warning: $src_file not found, skip install_update_geodata_script"
-        return 0
-    fi
-
-    # 添加定时任务脚本到uci-defaults，确保首次启动自动写入crontab
-    local uci_defaults_dir="$BUILD_DIR/package/base-files/files/etc/uci-defaults"
-    mkdir -p "$uci_defaults_dir"
-    cat >"$uci_defaults_dir/99-geodata-cron" <<'EOF'
-#!/bin/sh
-CRON_FILE="/etc/crontabs/root"
-CMD="3 3 * * * /usr/bin/v2ray-geodata-updater >/dev/null 2>&1"
-grep -F "$CMD" "$CRON_FILE" >/dev/null 2>&1 || echo "$CMD" >>"$CRON_FILE"
-EOF
-    chmod +x "$uci_defaults_dir/99-geodata-cron"
-}
-
 # 自定义v2ray-geodata下载
 custom_v2ray_geodata() {
     local file_path="$BUILD_DIR/feeds/small8/v2ray-geodata"
@@ -916,7 +892,6 @@ main() {
     support_fw4_adg
     update_script_priority
     fix_easytier
-    # install_update_geodata_script
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
     update_package "docker" "tags" "v28.2.2"
