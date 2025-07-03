@@ -3,7 +3,7 @@ run-name: Release - ${{ inputs.model }}
 
 on:
   workflow_run:
-    workflows: ["Auto-Clean"]
+    workflows: ["auto_clean"]
     types:
       - completed  
   workflow_dispatch:
