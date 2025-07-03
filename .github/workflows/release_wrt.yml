@@ -2,6 +2,10 @@ name: Release WRT
 run-name: Release - ${{ inputs.model }}
 
 on:
+  workflow_run:
+    workflows: ["Auto-Clean"]
+    types:
+      - completed  
   workflow_dispatch:
     inputs:
       model:
