@@ -2,6 +2,10 @@ name: Build WRT
 run-name: Build - ${{ inputs.model }}
 
 on:
+  workflow_run:
+    workflows: ["Auto-Clean"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       model:
