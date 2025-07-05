@@ -459,7 +459,6 @@ src/gz openwrt_luci https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/pa
 src/gz openwrt_packages https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/packages/
 src/gz openwrt_routing https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/routing/
 src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/telephony/
-src/gz openwrt_nikki https://nikkinikki.pages.dev/openwrt-24.10/aarch64_cortex-a53/nikki/
 EOF
 
         sed -i "/define Package\/default-settings\/install/a\\
@@ -516,7 +515,10 @@ update_menu_location() {
     # if [ -d "$(dirname "$samba4_path")" ] && [ -f "$samba4_path" ]; then
     #     sed -i 's/nas/services/g' "$samba4_path"
     # fi
-
+    local ksmbd_path="$BUILD_DIR/feeds/luci/applications/luci-app-ksmbd/root/usr/share/luci/menu.d/luci-app-ksmbd.json"
+    if [ -d "$(dirname "$ksmbd_path")" ] && [ -f "$ksmbd_path" ]; then
+        sed -i 's/services/nas/g' "$ksmbd_path"
+    fi
     local tailscale_path="$BUILD_DIR/feeds/small8/luci-app-tailscale/root/usr/share/luci/menu.d/luci-app-tailscale.json"
     if [ -d "$(dirname "$tailscale_path")" ] && [ -f "$tailscale_path" ]; then
         sed -i 's/services/vpn/g' "$tailscale_path"
