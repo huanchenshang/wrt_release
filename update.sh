@@ -845,6 +845,17 @@ custom_v2ray_geodata() {
     fi
 }
 
+# 修复nginx http访问
+fix_nginx_config() {
+    local file_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
+    # 下载新的nginx.config文件并覆盖
+    if [ -f "$file_path" ]; then
+        \rm -f "$file_path"
+        curl -L https://gist.githubusercontent.com/huanchenshang/e43c0ccf59cd9c16693887fd8e889822/raw/nginx.config \
+            -o "$file_path"
+    fi
+}
+
 # 主流程入口
 main() {
     clone_repo
@@ -882,6 +893,7 @@ main() {
     optimize_smartDNS
     update_mosdns_deconfig
     fix_quickstart
+    fix_nginx_config
     update_oaf_deconfig
     add_timecontrol
     add_gecoosac
