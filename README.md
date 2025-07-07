@@ -13,6 +13,7 @@ sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_e
 
 使用步骤：  
 git clone https://github.com/huanchenshang/wrt_release
+
 cd wrt_release  
   
 编译京东云亚瑟(01):  
