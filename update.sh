@@ -519,6 +519,10 @@ update_menu_location() {
     if [ -d "$(dirname "$ksmbd_path")" ] && [ -f "$ksmbd_path" ]; then
         sed -i 's/services/nas/g' "$ksmbd_path"
     fi
+    local unishare_path="$BUILD_DIR/feeds/small8/luci-app-unishare/root/usr/share/luci/menu.d/luci-app-unishare.json"
+    if [ -d "$(dirname "$unishare_path")" ] && [ -f "$unishare_path" ]; then
+        sed -i 's/services/nas/g' "$unishare_path"
+    fi
     local tailscale_path="$BUILD_DIR/feeds/small8/luci-app-tailscale/root/usr/share/luci/menu.d/luci-app-tailscale.json"
     if [ -d "$(dirname "$tailscale_path")" ] && [ -f "$tailscale_path" ]; then
         sed -i 's/services/vpn/g' "$tailscale_path"
