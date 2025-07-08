@@ -174,7 +174,7 @@ install_small8() {
         luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
         netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
         luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
-        easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-unishare unishare
+        easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd
 }
 
 # 安装所有feeds
@@ -518,10 +518,6 @@ update_menu_location() {
     local ksmbd_path="$BUILD_DIR/feeds/luci/applications/luci-app-ksmbd/root/usr/share/luci/menu.d/luci-app-ksmbd.json"
     if [ -d "$(dirname "$ksmbd_path")" ] && [ -f "$ksmbd_path" ]; then
         sed -i 's/services/nas/g' "$ksmbd_path"
-    fi
-    local unishare_path="$BUILD_DIR/feeds/small8/luci-app-unishare/root/usr/share/luci/menu.d/luci-app-unishare.json"
-    if [ -d "$(dirname "$unishare_path")" ] && [ -f "$unishare_path" ]; then
-        sed -i 's/services/nas/g' "$unishare_path"
     fi
     local tailscale_path="$BUILD_DIR/feeds/small8/luci-app-tailscale/root/usr/share/luci/menu.d/luci-app-tailscale.json"
     if [ -d "$(dirname "$tailscale_path")" ] && [ -f "$tailscale_path" ]; then
