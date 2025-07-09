@@ -42,7 +42,7 @@ jobs:
           remove-swapfile: "true"
 
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
 
       - name: Initialization Environment
         env:
