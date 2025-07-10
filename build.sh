@@ -77,17 +77,6 @@ EOF
     echo "cat_ebpf_config to $1 done"
 }
 
-# 修改内核大小
-set_kernel_size() {
-  image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
-  if [ -f "$image_file" ]; then
-    sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
-    echo "Kernel size updated in $image_file"
-  else
-    echo "Image file $image_file not found, skipping kernel size update"
-  fi
-}
-
 REPO_URL=$(read_ini_by_key "REPO_URL")
 REPO_BRANCH=$(read_ini_by_key "REPO_BRANCH")
 REPO_BRANCH=${REPO_BRANCH:-main}
@@ -100,6 +89,17 @@ if [[ -d $BASE_PATH/action_build ]]; then
 fi
 
 $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH"
+
+# 修改内核大小
+set_kernel_size() {
+  image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
+  if [ -f "$image_file" ]; then
+    sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
+    echo "Kernel size updated in $image_file"
+  else
+    echo "Image file $image_file not found, skipping kernel size update"
+  fi
+}
 
 # 修改内核大小
 set_kernel_size
