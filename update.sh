@@ -919,7 +919,7 @@ main() {
     optimize_smartDNS
     update_mosdns_deconfig
     fix_quickstart
-    fix_nginx_config
+    #fix_nginx_config
     update_oaf_deconfig
     add_timecontrol
     add_gecoosac
