@@ -943,7 +943,7 @@ main() {
     # fix_mkpkg_format_invalid
     change_cpuusage
     update_tcping
-    add_ax6600_led
+    #add_ax6600_led
     set_custom_task
     update_pw
     install_opkg_distfeeds
@@ -956,7 +956,7 @@ main() {
     update_dnsmasq_conf
     add_backup_info_to_sysupgrade
     optimize_smartDNS
-    update_mosdns_deconfig
+    #update_mosdns_deconfig
     fix_quickstart
     fix_nginx_config
     update_oaf_deconfig
@@ -964,7 +964,7 @@ main() {
     add_gecoosac
     update_lucky
     fix_rust_compile_error
-    update_smartdns_luci
+    #update_smartdns_luci
     update_diskman
     fix_samba4
     install_feeds
