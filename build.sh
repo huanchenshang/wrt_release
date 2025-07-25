@@ -26,6 +26,20 @@ read_ini_by_key() {
     awk -F"=" -v key="$key" '$1 == key {print $2}' "$INI_FILE"
 }
 
+# 移除 uhttpd 依赖
+# 当启用luci-app-quickfile插件时，表示启动nginx，所以移除luci对uhttp(luci-light)的依赖
+remove_uhttpd_dependency() {
+    local config_path="$BASE_PATH/$BUILD_DIR/.config"
+    local luci_makefile_path="$BASE_PATH/$BUILD_DIR/feeds/luci/collections/luci/Makefile"
+
+    if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
+        if [ -f "$luci_makefile_path" ]; then
+            sed -i '/luci-light/d' "$luci_makefile_path"
+            echo "Removed uhttpd (luci-light) dependency as luci-app-quickfile (nginx) is enabled."
+        fi
+    fi
+}
+
 # 添加内核配置以支持 dae
 cat_kernel_config() {
   if [ -f $1 ]; then
@@ -77,6 +91,21 @@ EOF
     echo "cat_ebpf_config to $1 done"
 }
 
+# 修改内核大小
+set_kernel_size() {
+  image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
+  if [ -f "$image_file" ]; then
+    sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
+    sed -i "/^define Device\/jdcloud_re-cs-02/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" $image_file
+    sed -i "/^define Device\/jdcloud_re-cs-07/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" $image_file
+    sed -i "/^define Device\/redmi_ax5-jdcloud/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" $image_file
+    sed -i "/^define Device\/linksys_mr/,/^endef/ { /KERNEL_SIZE := 8192k/s//KERNEL_SIZE := 12288k/ }" $image_file
+    echo "Kernel size updated in $image_file"
+  else
+    echo "Image file $image_file not found, skipping kernel size update"
+  fi
+}
+
 REPO_URL=$(read_ini_by_key "REPO_URL")
 REPO_BRANCH=$(read_ini_by_key "REPO_BRANCH")
 REPO_BRANCH=${REPO_BRANCH:-main}
@@ -89,32 +118,17 @@ if [[ -d $BASE_PATH/action_build ]]; then
 fi
 
 $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH"
-
-# 修改内核大小
-set_kernel_size() {
-  image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
-  if [ -f "$image_file" ]; then
-    sed -i "/^define Device\/jdcloud_re-ss-01/,/^endef/ { /KERNEL_SIZE := 6144k/s//KERNEL_SIZE := 12288k/ }" "$image_file"
-    echo "Kernel size updated in $image_file"
-  else
-    echo "Image file $image_file not found, skipping kernel size update"
-  fi
-}
-
-# 修改内核大小
-set_kernel_size
-
 # 复制配置文件
 \cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
 
+# 移除 uhttpd 依赖
+remove_uhttpd_dependency
 # 添加 eBPF 配置
 cat_ebpf_config "$BASE_PATH/$BUILD_DIR/.config"
-
-# 添加内核配置（根据目标架构）
-if grep -qE "^CONFIG_TARGET_qualcommax=y" "$CONFIG_FILE"; then
-    TARGET=$(grep -E "^CONFIG_TARGET_.*_.*=y" "$CONFIG_FILE" | cut -d'_' -f3 | cut -d'=' -f1)
-    cat_kernel_config "$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/$TARGET/config-default"
-fi
+# 修改内核大小
+set_kernel_size
+# 添加内核配置
+cat_kernel_config "$BASE_PATH/$BUILD_DIR/.config"
 
 cd "$BASE_PATH/$BUILD_DIR"
 make defconfig
