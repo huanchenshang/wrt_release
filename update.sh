@@ -24,7 +24,7 @@ COMMIT_HASH=$4
 # 变量定义
 FEEDS_CONF="feeds.conf.default"
 GOLANG_REPO="https://github.com/sbwml/packages_lang_golang"
-GOLANG_BRANCH="24.x"
+GOLANG_BRANCH="25.x"
 THEME_SET="argon"
 LAN_ADDR="192.168.10.1"
 
@@ -177,6 +177,16 @@ install_small8() {
         easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-unishare unishare webdav2
 }
 
+# 安装fullconenat相关包
+install_fullconenat() {
+    if [ ! -d $BUILD_DIR/package/network/utils/fullconenat-nft ]; then
+        ./scripts/feeds install -p small8 -f fullconenat-nft
+    fi
+    if [ ! -d $BUILD_DIR/package/network/utils/fullconenat ]; then
+        ./scripts/feeds install -p small8 -f fullconenat
+    fi
+}
+
 # 安装所有feeds
 install_feeds() {
     ./scripts/feeds update -i
@@ -232,16 +242,6 @@ change_dnsmasq2full() {
     fi
 }
 
-# 安装fullconenat相关包
-install_fullconenat() {
-    if [ ! -d $BUILD_DIR/package/network/utils/fullconenat-nft ]; then
-        ./scripts/feeds install -p small8 -f fullconenat-nft
-    fi
-    if [ ! -d $BUILD_DIR/package/network/utils/fullconenat ]; then
-        ./scripts/feeds install -p small8 -f fullconenat
-    fi
-}
-
 # 修正默认依赖
 fix_mk_def_depends() {
     sed -i 's/libustream-mbedtls/libustream-openssl/g' $BUILD_DIR/include/target.mk 2>/dev/null
@@ -272,36 +272,29 @@ update_default_lan_addr() {
 
 # 移除NSS相关kmod
 remove_something_nss_kmod() {
-    local ipq_target_path="$BUILD_DIR/target/linux/qualcommax/ipq60xx/target.mk"
     local ipq_mk_path="$BUILD_DIR/target/linux/qualcommax/Makefile"
-    if [ -f $ipq_target_path ]; then
-        sed -i 's/kmod-qca-nss-drv-eogremgr//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-gre//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-map-t//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-match//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-mirror//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-pvxlanmgr//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-tun6rd//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-tunipip6//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-drv-vxlanmgr//g' $ipq_target_path
-        sed -i 's/kmod-qca-nss-macsec//g' $ipq_target_path
-    fi
+    local target_mks=("$BUILD_DIR/target/linux/qualcommax/ipq60xx/target.mk" "$BUILD_DIR/target/linux/qualcommax/ipq807x/target.mk")
 
-    if [ -f $ipq_mk_path ]; then
-        sed -i 's/kmod-qca-nss-crypto //g' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-eogremgr/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-gre/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-map-t/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-match/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-mirror/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-tun6rd/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-tunipip6/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-vxlanmgr/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-drv-wifi-meshmgr/d' $ipq_mk_path
-        sed -i '/kmod-qca-nss-macsec/d' $ipq_mk_path
+    for target_mk in "${target_mks[@]}"; do
+        if [ -f "$target_mk" ]; then
+            sed -i 's/kmod-qca-nss-crypto//g' "$target_mk"
+        fi
+    done
 
-        sed -i 's/automount //g' $ipq_mk_path
-        sed -i 's/cpufreq //g' $ipq_mk_path
+    if [ -f "$ipq_mk_path" ]; then
+        sed -i '/kmod-qca-nss-drv-eogremgr/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-gre/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-map-t/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-match/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-mirror/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-tun6rd/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-tunipip6/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-vxlanmgr/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-drv-wifi-meshmgr/d' "$ipq_mk_path"
+        sed -i '/kmod-qca-nss-macsec/d' "$ipq_mk_path"
+
+        sed -i 's/automount //g' "$ipq_mk_path"
+        sed -i 's/cpufreq //g' "$ipq_mk_path"
     fi
 }
 
@@ -845,15 +838,48 @@ fix_rust_compile_error() {
 }
 
 # 更新smartdns luci
-update_smartdns_luci() {
-    if [ -d "$BUILD_DIR/feeds/small8/luci-app-smartdns" ]; then
-        rm -rf "$BUILD_DIR/feeds/small8/luci-app-smartdns"
-    fi
-    git clone --depth 1 -b master https://github.com/pymumu/luci-app-smartdns.git "$BUILD_DIR/feeds/small8/luci-app-smartdns"
+update_smartdns() {
+    local feeds_dir="$BUILD_DIR/feeds/small8"
+    local luci_app_smartdns_path="$feeds_dir/luci-app-smartdns"
+    local old_smartdns_pkg_path="$feeds_dir/smartdns"
+    local new_smartdns_pkg_path="$feeds_dir/openwrt-smartdns"
+    local tmp_dir
 
-    if [ -f "$BUILD_DIR/feeds/small8/luci-app-smartdns/Makefile" ]; then
-        sed -i 's/\.\.\/\.\.\/luci\.mk/\$(TOPDIR)\/feeds\/luci\/luci\.mk/g' "$BUILD_DIR/feeds/small8/luci-app-smartdns/Makefile"
+    echo "正在更新 luci-app-smartdns..."
+    # 删除旧版并克隆新版
+    \rm -rf "$luci_app_smartdns_path"
+    if ! git clone --depth 1 -b master https://github.com/pymumu/luci-app-smartdns.git "$luci_app_smartdns_path"; then
+        echo "错误：克隆 luci-app-smartdns 失败。" >&2
+        return 1
     fi
+
+    # 修复 Makefile 中的路径
+    local makefile_path="$luci_app_smartdns_path/Makefile"
+    if [ -f "$makefile_path" ]; then
+        sed -i 's/\.\.\/\.\.\/luci\.mk/$(TOPDIR)\/feeds\/luci\/luci\.mk/g' "$makefile_path"
+    fi
+
+    echo "正在更新 smartdns..."
+
+    # 使用临时目录克隆
+    tmp_dir=$(mktemp -d)
+    if ! git clone --depth 1 -b master https://github.com/pymumu/openwrt-smartdns.git "$tmp_dir"; then
+        echo "错误：克隆 openwrt-smartdns 仓库失败。" >&2
+        rm -rf "$tmp_dir"
+        return 1
+    else
+        # 删除旧版
+        rm -rf "$old_smartdns_pkg_path"
+        mv "$tmp_dir" "$new_smartdns_pkg_path"
+
+        # 修复 Makefile 中的路径
+        makefile_path="$new_smartdns_pkg_path/Makefile"
+        if [ -f "$makefile_path" ]; then
+            sed -i 's/\.\.\/\.\.\/lang/$(TOPDIR)\/feeds\/packages\/lang/g' "$makefile_path"
+        fi
+    fi
+
+    echo "SmartDNS 更新完成。"
 }
 
 # 自定义v2ray-geodata下载
@@ -908,16 +934,64 @@ update_diskman() {
     fi
 }
 
-fix_samba4() {
-    local SAMBA4_MAKEFILE="$BUILD_DIR/feeds/packages/net/samba4/Makefile"
+add_quickfile() {
+    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
+    local target_dir="$BUILD_DIR/package/emortal/quickfile"
+    if [ -d "$target_dir" ]; then
+        rm -rf "$target_dir"
+    fi
+    git clone --depth 1 "$repo_url" "$target_dir"
 
-    # 检查 samba4-libs 的依赖中是否已经包含了 libcrypt-compat
-    if ! sed -n '/define Package\/samba4-libs/,/endef/p' "$SAMBA4_MAKEFILE" | grep -q 'DEPENDS:=.*+libcrypt-compat'; then
-        echo "Adding +libcrypt-compat dependency to samba4-libs..."
-        # 使用更健壮的命令来添加依赖
-        sed -i '/define Package\/samba4-libs/,/endef/s/^\(\s*DEPENDS:=\)/\1 +libcrypt-compat/' "$SAMBA4_MAKEFILE"
-    else
-        echo "Dependency +libcrypt-compat already exists in samba4-libs."
+    local makefile_path="$target_dir/quickfile/Makefile"
+    if [ -f "$makefile_path" ]; then
+        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
+\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
+\telse \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
+\tfi' "$makefile_path"
+    fi
+}
+
+# 设置 Nginx 默认配置
+set_nginx_default_config() {
+    local nginx_config_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
+    if [ -f "$nginx_config_path" ]; then
+        # 使用 cat 和 heredoc 覆盖写入 nginx.config 文件
+        cat > "$nginx_config_path" <<EOF
+config main 'global'
+        option uci_enable 'true'
+
+config server '_lan'
+        list listen '443 ssl default_server'
+        list listen '[::]:443 ssl default_server'
+        option server_name '_lan'
+        list include 'restrict_locally'
+        list include 'conf.d/*.locations'
+        option uci_manage_ssl 'self-signed'
+        option ssl_certificate '/etc/nginx/conf.d/_lan.crt'
+        option ssl_certificate_key '/etc/nginx/conf.d/_lan.key'
+        option ssl_session_cache 'shared:SSL:32k'
+        option ssl_session_timeout '64m'
+        option access_log 'off; # logd openwrt'
+
+config server 'http_only'
+        list listen '80'
+        list listen '[::]:80'
+        option server_name 'http_only'
+        list include 'conf.d/*.locations'
+        option access_log 'off; # logd openwrt'
+EOF
+    fi
+
+    local nginx_template="$BUILD_DIR/feeds/packages/net/nginx-util/files/uci.conf.template"
+    if [ -f "$nginx_template" ]; then
+        # 检查是否已存在配置，避免重复添加
+        if ! grep -q "client_body_in_file_only clean;" "$nginx_template"; then
+            sed -i "/client_max_body_size 128M;/a\\
+\tclient_body_in_file_only clean;\\
+\tclient_body_temp_path /mnt/tmp;" "$nginx_template"
+        fi
     fi
 }
 
@@ -943,7 +1017,7 @@ main() {
     # fix_mkpkg_format_invalid
     change_cpuusage
     update_tcping
-    #add_ax6600_led
+    add_ax6600_led
     set_custom_task
     update_pw
     install_opkg_distfeeds
@@ -956,17 +1030,18 @@ main() {
     update_dnsmasq_conf
     add_backup_info_to_sysupgrade
     optimize_smartDNS
-    #update_mosdns_deconfig
+    update_mosdns_deconfig
     fix_quickstart
-    fix_nginx_config
+    #fix_nginx_config
     update_oaf_deconfig
     add_timecontrol
     add_gecoosac
+    add_quickfile
     update_lucky
     fix_rust_compile_error
-    #update_smartdns_luci
+    # update_smartdns 暂不更新，openwrt-smartdns不适配
     update_diskman
-    fix_samba4
+    set_nginx_default_config
     install_feeds
     support_fw4_adg
     update_script_priority
