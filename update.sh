@@ -213,6 +213,12 @@ fix_default_set() {
     # 使用主源中的 luci-theme-argon 和 luci-app-argon-config
     if [ -d "$BUILD_DIR/feeds/luci/themes/luci-theme-argon" ]; then
         find "$BUILD_DIR/feeds/luci/themes/luci-theme-argon" -type f -name "cascade*" -exec sed -i 's/--bar-bg/--primary/g' {} \;
+        # 替换 Argon 主题背景图片
+        if [ -n "$GITHUB_WORKSPACE" ] && [ -f "$GITHUB_WORKSPACE/images/bg1.jpg" ]; then
+            \cp -f "$GITHUB_WORKSPACE/images/bg1.jpg" "$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg"
+        else
+            echo "Warning: GITHUB_WORKSPACE not defined or bg1.jpg not found, skipping background image replacement."
+        fi
     fi
 
     install -Dm755 "$BASE_PATH/patches/990_set_argon_primary" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/990_set_argon_primary"
