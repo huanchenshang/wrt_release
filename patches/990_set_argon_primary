@@ -6,5 +6,12 @@ if [ ! -f /etc/config/argon ]; then
 fi
 
 uci set argon.@global[0].primary='#5e72e4'
+uci set argon.@global[0].dark_primary='#483d8b'
+uci set argon.@global[0].progressbar_font='#2e2b60'
+uci set argon.@global[0].blur='10'
+uci set argon.@global[0].blur_dark='10'
 uci set argon.@global[0].transparency='0.3'
+uci set argon.@global[0].transparency_dark='0.5'
+uci set argon.@global[0].mode='normal'
+uci set argon.@global[0].online_wallpaper='none'
 uci commit argon
