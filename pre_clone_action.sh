@@ -40,3 +40,9 @@ PROJECT_MIRRORS_FILE="$BUILD_DIR/scripts/projectsmirrors.json"
 if [ -f "$PROJECT_MIRRORS_FILE" ]; then
     sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
 fi
+
+#更新feeds
+cd $BUILD_DIR
+./scripts/feeds update -a
+./scripts/feeds install libxml2 libxml2-dev libxslt
+cd $BASE_PATH
