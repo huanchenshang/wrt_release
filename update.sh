@@ -309,19 +309,6 @@ update_affinity_script() {
     fi
 }
 
-# 修复openssl编译（如有需要可取消注释）
-fix_build_for_openssl() {
-    local openssl_dir="$BUILD_DIR/package/libs/openssl"
-    local makefile="$openssl_dir/Makefile"
-    if [ -d "$(dirname "$makefile")" ] && [ -f "$makefile" ]; then
-        if grep -q "3.0.16" "$makefile"; then
-            # 替换本地openssl版本
-            rm -rf "$openssl_dir"
-            cp -rf "$BASE_PATH/patches/openssl" "$openssl_dir"
-        fi
-    fi
-}
-
 # 更新ath11k固件Makefile
 update_ath11k_fw() {
     local makefile="$BUILD_DIR/package/firmware/ath11k-firmware/Makefile"
@@ -1068,7 +1055,6 @@ main() {
     update_default_lan_addr
     remove_something_nss_kmod
     update_affinity_script
-    # fix_build_for_openssl
     update_ath11k_fw
     # fix_mkpkg_format_invalid
     change_cpuusage
