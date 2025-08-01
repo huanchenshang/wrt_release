@@ -213,12 +213,6 @@ fix_default_set() {
     # 使用主源中的 luci-theme-argon 和 luci-app-argon-config
     if [ -d "$BUILD_DIR/feeds/luci/themes/luci-theme-argon" ]; then
         find "$BUILD_DIR/feeds/luci/themes/luci-theme-argon" -type f -name "cascade*" -exec sed -i 's/--bar-bg/--primary/g' {} \;
-        # 替换 Argon 主题背景图片
-        if [ -n "$GITHUB_WORKSPACE" ] && [ -f "$GITHUB_WORKSPACE/images/bg1.jpg" ]; then
-            \cp -f "$GITHUB_WORKSPACE/images/bg1.jpg" "$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg"
-        else
-            echo "Warning: GITHUB_WORKSPACE not defined or bg1.jpg not found, skipping background image replacement."
-        fi
     fi
 
     install -Dm755 "$BASE_PATH/patches/990_set_argon_primary" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/990_set_argon_primary"
@@ -1001,33 +995,7 @@ EOF
     fi
 }
 
-update_uwsgi_limit_as() {
-    # 更新 uwsgi 的 limit-as 配置，将其值更改为 8192
-    local cgi_io_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-cgi_io.ini"
-    local webui_ini="$BUILD_DIR/feeds/packages/net/uwsgi/files-luci-support/luci-webui.ini"
-
-    if [ -f "$cgi_io_ini" ]; then
-        # 将 luci-cgi_io.ini 文件中的 limit-as 值更新为 8192
-        sed -i 's/^limit-as = .*/limit-as = 8192/g' "$cgi_io_ini"
-    fi
-
-    if [ -f "$webui_ini" ]; then
-        # 将 luci-webui.ini 文件中的 limit-as 值更新为 8192
-        sed -i 's/^limit-as = .*/limit-as = 8192/g' "$webui_ini"
-    fi
-}
-
-remove_tweaked_packages() {
-    local target_mk="$BUILD_DIR/include/target.mk"
-    if [ -f "$target_mk" ]; then
-        # 检查目标行是否未被注释
-        if grep -q "^DEFAULT_PACKAGES += \$(DEFAULT_PACKAGES.tweak)" "$target_mk"; then
-            # 如果未被注释，则添加注释
-            sed -i 's/DEFAULT_PACKAGES += $(DEFAULT_PACKAGES.tweak)/# DEFAULT_PACKAGES += $(DEFAULT_PACKAGES.tweak)/g' "$target_mk"
-        fi
-    fi
-}
-
+# 主流程入口
 # 修复 gettext 编译问题
 # @description: 当 gettext-full 版本为 0.24.1 时，从 OpenWrt 官方仓库更新 gettext-full 和 bison 的 Makefile 以解决编译问题。
 # @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile
@@ -1057,14 +1025,12 @@ fix_gettext_compile() {
         fi
     fi
 }
-
 main() {
     clone_repo
     clean_up
     reset_feeds_conf
     update_feeds
     remove_unwanted_packages
-    remove_tweaked_packages
     update_homeproxy
     fix_default_set
     fix_miniupnpd
@@ -1105,7 +1071,6 @@ main() {
     # update_smartdns 暂不更新，openwrt-smartdns不适配
     update_diskman
     set_nginx_default_config
-    update_uwsgi_limit_as
     fix_gettext_compile
     install_feeds
     support_fw4_adg
