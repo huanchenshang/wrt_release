@@ -127,7 +127,6 @@ cat_ebpf_config "$BASE_PATH/$BUILD_DIR/.config"
 # 修改内核大小
 set_kernel_size
 # 添加内核配置
-#cat_kernel_config "$BASE_PATH/$BUILD_DIR/.config"
 cat_kernel_config "$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/ipq60xx/config-default"
 
 cd "$BASE_PATH/$BUILD_DIR"
