@@ -2,6 +2,11 @@ name: Release WRT
 run-name: Release - ${{ inputs.model }}
 
 on:
+  #自动编译：当Auto-Clean运行完成后
+  workflow_run:
+    workflows: ["Auto-Clean"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       model:
@@ -21,6 +26,9 @@ on:
           - ubuntu-20.04
           - ubuntu-22.04
           - ubuntu-24.04
+
+#CI权限
+permissions: write-all
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
