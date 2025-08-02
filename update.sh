@@ -865,6 +865,21 @@ fix_gettext_compile() {
     fi
 }
 
+update_argon_background() {
+    local theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+    local source_path="$BASE_PATH/images"
+    local source_file="$source_path/bg1.jpg"
+    local target_file="$theme_path/bg1.jpg"
+
+    if [ -f "$source_file" ]; then
+        cp -f "$source_file" "$target_file"
+        echo "背景图片更新成功：$target_file"
+    else
+        echo "错误：未找到源图片文件：$source_file"
+        return 1
+    fi
+}
+
 main() {
     clone_repo
     clean_up
@@ -914,6 +929,7 @@ main() {
     install_feeds
     support_fw4_adg
     update_script_priority
+    update_argon_background
     fix_easytier
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
