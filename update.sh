@@ -86,24 +86,24 @@ update_feeds() {
 
 remove_unwanted_packages() {
     local luci_packages=(
-        "luci-app-passwall" "luci-app-smartdns" "luci-app-ddns-go" "luci-app-rclone"
-        "luci-app-ssr-plus" "luci-app-vssr"
-        "luci-app-alist" "luci-app-homeproxy" "luci-app-haproxy-tcp"
-        "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter" "luci-app-msd_lite"
+        "luci-app-passwall" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
+        "luci-app-vssr" "luci-app-alist" "luci-app-homeproxy" 
+        "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
+        "luci-app-msd_lite"
     )
     local packages_net=(
         "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
-        "smartdns" "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
+        "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
         "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
-        "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs"
-        "shadowsocksr-libev" "mihomo" "geoview" "tailscale" "open-app-filter"
-        "msd_lite"
+        "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs" "shadowsocksr-libev"
+        "mihomo" "geoview" "tailscale" "open-app-filter" "msd_lite"       
     )
     local packages_utils=(
         "cups"
     )
     local small8_packages=(
-        "ppp" "firewall" "daed-next" "libnftnl" "nftables" "dnsmasq"
+        "ppp" "firewall" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-app-alist"
+        "alist" "opkg" "smartdns" "luci-app-smartdns"
     )
 
     for pkg in "${luci_packages[@]}"; do
@@ -159,12 +159,12 @@ install_small8() {
     ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
         naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin \
         tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
-        luci-app-passwall smartdns luci-app-smartdns v2dat mosdns luci-app-mosdns \
-        adguardhome luci-app-adguardhome ddns-go luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd \
-        luci-app-store quickstart luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest \
-        netdata luci-app-netdata lucky luci-app-lucky luci-app-openclash luci-app-homeproxy \
-        luci-app-amlogic nikki luci-app-nikki tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf \
-        easytier luci-app-easytier msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-unishare unishare webdav2
+        luci-app-passwall v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
+        luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
+        luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
+        lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
+        tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
+        msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-unishare unishare webdav2
 }
 
 install_fullconenat() {
@@ -195,11 +195,6 @@ fix_default_set() {
     # 修改默认主题
     if [ -d "$BUILD_DIR/feeds/luci/collections/" ]; then
         find "$BUILD_DIR/feeds/luci/collections/" -type f -name "Makefile" -exec sed -i "s/luci-theme-bootstrap/luci-theme-$THEME_SET/g" {} \;
-    fi
-
-    # 使用主源中的 luci-theme-argon 和 luci-app-argon-config
-    if [ -d "$BUILD_DIR/feeds/luci/themes/luci-theme-argon" ]; then
-        find "$BUILD_DIR/feeds/luci/themes/luci-theme-argon" -type f -name "cascade*" -exec sed -i 's/--bar-bg/--primary/g' {} \;
     fi
 
     install -Dm755 "$BASE_PATH/patches/990_set_argon_primary" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/990_set_argon_primary"
@@ -693,7 +688,25 @@ fix_rust_compile_error() {
     fi
 }
 
+update_smartdns() {
+    # smartdns 仓库地址
+    local SMARTDNS_REPO="https://github.com/pymumu/openwrt-smartdns.git"
+    local SMARTDNS_DIR="$BUILD_DIR/feeds/packages/net/smartdns"
+    # luci-app-smartdns 仓库地址
+    local LUCI_APP_SMARTDNS_REPO="https://github.com/pymumu/luci-app-smartdns.git"
+    local LUCI_APP_SMARTDNS_DIR="$BUILD_DIR/feeds/luci/applications/luci-app-smartdns"
 
+    echo "正在更新 smartdns..."
+    rm -rf "$SMARTDNS_DIR"
+    git clone --depth=1 "$SMARTDNS_REPO" "$SMARTDNS_DIR"
+
+    install -Dm644 "$BASE_PATH/patches/100-smartdns-optimize.patch" "$SMARTDNS_DIR/patches/100-smartdns-optimize.patch"
+    sed -i '/define Build\/Compile\/smartdns-ui/,/endef/s/CC=\$(TARGET_CC)/CC="\$(TARGET_CC_NOCACHE)"/' "$SMARTDNS_DIR/Makefile"
+
+    echo "正在更新 luci-app-smartdns..."
+    rm -rf "$LUCI_APP_SMARTDNS_DIR"
+    git clone --depth=1 "$LUCI_APP_SMARTDNS_REPO" "$LUCI_APP_SMARTDNS_DIR"
+}
 
 # 自定义v2ray-geodata下载
 custom_v2ray_geodata() {
@@ -709,17 +722,6 @@ custom_v2ray_geodata() {
         # 下载v2ray-geodata-updater文件
         curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/v2ray-geodata-updater \
             -o "$file_path/v2ray-geodata-updater"
-    fi
-}
-
-# 修复nginx http访问
-fix_nginx_config() {
-    local file_path="$BUILD_DIR/feeds/packages/net/nginx-util/files/nginx.config"
-    # 下载新的nginx.config文件并覆盖
-    if [ -f "$file_path" ]; then
-        \rm -f "$file_path"
-        curl -L https://gist.githubusercontent.com/huanchenshang/e43c0ccf59cd9c16693887fd8e889822/raw/nginx.config \
-            -o "$file_path"
     fi
 }
 
@@ -835,49 +837,21 @@ remove_tweaked_packages() {
     fi
 }
 
-# 修复 gettext 编译问题
-# @description: 当 gettext-full 版本为 0.24.1 时，从 OpenWrt 官方仓库更新 gettext-full 和 bison 的 Makefile 以解决编译问题。
-# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile
-# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile
-fix_gettext_compile() {
-    local gettext_makefile_path="$BUILD_DIR/package/libs/gettext-full/Makefile"
-    local bison_makefile_path="$BUILD_DIR/tools/bison/Makefile"
+update_argon() {
+    local repo_url="https://github.com/jjm2473/luci-theme-argon.git"
+    local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
+    local tmp_dir=$(mktemp -d)
 
-    # 检查 gettext-full 的 Makefile 是否存在并且版本是否为 0.24.1
-    if [ -f "$gettext_makefile_path" ] && grep -q "PKG_VERSION:=0.24.1" "$gettext_makefile_path"; then
-        echo "检测到 gettext 版本为 0.24.1，正在更新 Makefiles..."
-        # 从 OpenWrt 官方仓库下载最新的 Makefile
-        curl -L -o "$gettext_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile"
-        curl -L -o "$bison_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile"
+    echo "正在更新 argon 主题..."
 
+    git clone --depth 1 "$repo_url" "$tmp_dir"
 
-        # https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/0001-po-update-for-gettext-0.22.patch
-        # 使用以上补丁修复rpcsvc-proto编译错误
-        local rpcsvc_proto_dir="$BUILD_DIR/feeds/packages/libs/rpcsvc-proto"
-        if [ -d "$rpcsvc_proto_dir" ]; then
-            local patches_dir="$rpcsvc_proto_dir/patches"
-            local patch_name="0001-po-update-for-gettext-0.22.patch"
-            local patch_url="https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/$patch_name"
-            echo "正在为 rpcsvc-proto 添加 gettext 修复补丁..."
-            mkdir -p "$patches_dir"
-            curl -L -o "$patches_dir/$patch_name" "$patch_url"
-        fi
-    fi
-}
+    rm -rf "$dst_theme_path"
+    rm -rf "$tmp_dir/.git"
+    mv "$tmp_dir" "$dst_theme_path"
 
-update_argon_background() {
-    local theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
-    local source_path="$BASE_PATH/images"
-    local source_file="$source_path/bg1.jpg"
-    local target_file="$theme_path/bg1.jpg"
-
-    if [ -f "$source_file" ]; then
-        cp -f "$source_file" "$target_file"
-        echo "背景图片更新成功：$target_file"
-    else
-        echo "错误：未找到源图片文件：$source_file"
-        return 1
-    fi
+    echo "luci-theme-argon 更新完成"
+    echo "Argon 更新完毕。"
 }
 
 main() {
@@ -914,7 +888,6 @@ main() {
     add_backup_info_to_sysupgrade
     update_mosdns_deconfig
     fix_quickstart
-    #fix_nginx_config
     update_oaf_deconfig
     add_timecontrol
     add_gecoosac
@@ -925,17 +898,16 @@ main() {
     update_diskman
     set_nginx_default_config
     update_uwsgi_limit_as
-    fix_gettext_compile
+    update_argon
     install_feeds
     support_fw4_adg
     update_script_priority
-    update_argon_background
     fix_easytier
+    custom_v2ray_geodata
     update_package "runc" "releases" "v1.2.6"
     update_package "containerd" "releases" "v1.7.27"
     update_package "docker" "tags" "v28.2.2"
     update_package "dockerd" "releases" "v28.2.2"
-    custom_v2ray_geodata
 }
 
 main "$@"
