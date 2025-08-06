@@ -306,6 +306,16 @@ apply_hash_fixes() {
         "smartdns"
 }
 
+update_ath11k_fw() {
+    local makefile="$BUILD_DIR/package/firmware/ath11k-firmware/Makefile"
+    local new_mk="$BASE_PATH/patches/ath11k_fw.mk"
+
+    if [ -d "$(dirname "$makefile")" ] && [ -f "$makefile" ]; then
+        [ -f "$new_mk" ] && \rm -f "$new_mk"
+        curl -L -o "$new_mk" https://raw.githubusercontent.com/VIKINGYFY/immortalwrt/refs/heads/main/package/firmware/ath11k-firmware/Makefile
+        \mv -f "$new_mk" "$makefile"
+    fi
+}
 
 fix_mkpkg_format_invalid() {
     if [[ $BUILD_DIR =~ "imm-nss" ]]; then
