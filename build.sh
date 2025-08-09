@@ -41,8 +41,9 @@ remove_uhttpd_dependency() {
 
 # 添加内核配置以支持 dae
 cat_kernel_config() {
-  if [ -f $1 ]; then
-    cat >> $1 <<EOF
+conde_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/ipq60xx/config-default"
+  if [ -f "$conde_file" ]; then
+    cat >> "$conde_file" <<EOF
 CONFIG_BPF=y
 CONFIG_BPF_SYSCALL=y
 CONFIG_BPF_JIT=y
@@ -60,7 +61,7 @@ CONFIG_DEBUG_INFO_BTF=y
 CONFIG_KPROBE_EVENTS=y
 CONFIG_BPF_EVENTS=y
 EOF
-    echo "cat_kernel_config to $1 done"
+    echo "cat_kernel_config to "$conde_file" done"
   fi
 }
 
@@ -99,7 +100,7 @@ remove_uhttpd_dependency
 # 修改内核大小
 set_kernel_size
 # 添加内核配置
-cat_kernel_config "$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/ipq60xx/config-default"
+cat_kernel_config
 
 cd "$BASE_PATH/$BUILD_DIR"
 make defconfig
