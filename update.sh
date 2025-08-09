@@ -457,7 +457,8 @@ sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" "$emortal_def_dir/fil
         # 删除指定行
         sed -i "/sed -i '\/openwrt_luci\/ { s\/snapshots\/releases\\\\\/18.06.9\/g; }' \/etc\/opkg\/distfeeds.conf/d" "$zzz_default_settings"
         # 替换指定行
-        sed -i "s#sed -i 's#downloads.openwrt.org#mirrors.tencent.com/lede#g' /etc/opkg/distfeeds.conf#sed -i 's#downloads.openwrt.org#downloads.immortalwrt.org#g' /etc/opkg/distfeeds.conf#" "$zzz_default_settings"
+        sed -i "s#mirrors.tencent.com/lede#downloads.immortalwrt.org#g" "$zzz_default_settings"
+
     fi
 }
 
