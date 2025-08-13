@@ -65,6 +65,26 @@ EOF
   fi
 }
 
+cat_ebpf_config() {
+config_file="$BASE_PATH/$BUILD_DIR/.config"
+  if [ -f "$config_file" ]; then
+    cat >> $config_file <<EOF
+CONFIG_DEVEL=y
+CONFIG_KERNEL_DEBUG_INFO=y
+CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
+CONFIG_KERNEL_DEBUG_INFO_BTF=y
+CONFIG_KERNEL_CGROUPS=y
+CONFIG_KERNEL_CGROUP_BPF=y
+CONFIG_KERNEL_BPF_EVENTS=y
+CONFIG_BPF_TOOLCHAIN_HOST=y
+CONFIG_KERNEL_XDP_SOCKETS=y
+CONFIG_PACKAGE_kmod-xdp-sockets-diag=y
+EOF
+
+    echo "cat_ebpf_config to  $config_file done"
+  fi
+}
+
 # 修改内核大小
 set_kernel_size() {
   image_file="$BASE_PATH/$BUILD_DIR/target/linux/qualcommax/image/ipq60xx.mk"
@@ -97,6 +117,7 @@ $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT
 
 # 移除 uhttpd 依赖
 remove_uhttpd_dependency
+cat_ebpf_config
 # 修改内核大小
 set_kernel_size
 # 添加内核配置
