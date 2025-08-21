@@ -869,41 +869,6 @@ else
     echo "错误：修改automount和ntfs中文失败"
 fi
 
-#修改CPU 性能优化调节名称显示
-cpu_path="$BUILD_DIR/feeds/luci/applications/luci-app-cpufreq"
-po_file="$cpu_path/po/zh_Hans/cpufreq.po"
-
-if [ -d "$cpu_path" ] && [ -f "$po_file" ]; then
-    sed -i 's/msgstr "CPU 性能优化调节"/msgstr "性能调节"/g' "$po_file"
-    echo "cpu调节更名成功"
-else
-    echo "cpufreq.po文件未找到"
-fi
-
-#修改Argon 主题设置名称显示
-argon_path="$BUILD_DIR/feeds/luci/applications/luci-app-argon-config"
-argonpo_file="$argon_path/po/zh_Hans/argon-config.po"
-
-if [ -d "$argon_path" ] && [ -f "$argonpo_file" ]; then
-    sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/g' "$argonpo_file"
-    echo "主题设置更名成功"
-else
-    echo "argon-config.po文件没有找到"
-fi
-
-#修改argon背景图片
-theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
-source_path="$BASE_PATH/images"
-source_file="$source_path/bg1.jpg"
-target_file="$theme_path/bg1.jpg"
-
-if [ -f "$source_file" ]; then
-    cp -f "$source_file" "$target_file"
-    echo "背景图片更新成功"
-else
-    echo "错误：未找到源图片文件"
-fi
-
 main() {
     clone_repo
     clean_up
