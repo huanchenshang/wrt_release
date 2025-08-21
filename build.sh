@@ -124,8 +124,6 @@ $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT
 # 复制配置文件
 \cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
 
-# 移除 uhttpd 依赖
-remove_uhttpd_dependency
 cat_ebpf_config
 # 修改内核大小
 set_kernel_size

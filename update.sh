@@ -216,11 +216,6 @@ fix_miniupnpd() {
     fi
 }
 
-change_dnsmasq2full() {
-    if ! grep -q "dnsmasq-full" $BUILD_DIR/include/target.mk; then
-        sed -i 's/dnsmasq/dnsmasq-full/g' ./include/target.mk
-    fi
-}
 
 fix_mk_def_depends() {
     sed -i 's/libustream-mbedtls/libustream-openssl/g' $BUILD_DIR/include/target.mk 2>/dev/null
@@ -284,27 +279,6 @@ update_affinity_script() {
     fi
 }
 
-# 通用函数，用于修正 Makefile 中的哈希值
-fix_hash_value() {
-    local makefile_path="$1"
-    local old_hash="$2"
-    local new_hash="$3"
-    local package_name="$4"
-
-    if [ -f "$makefile_path" ]; then
-        sed -i "s/$old_hash/$new_hash/g" "$makefile_path"
-        echo "已修正 $package_name 的哈希值。"
-    fi
-}
-
-# 应用所有哈希值修正
-apply_hash_fixes() {
-    fix_hash_value \
-        "$BUILD_DIR/package/feeds/packages/smartdns/Makefile" \
-        "150019a03f1ec2e4b5849740a72badf5ea094d5754bd59dd30119523a3ce9398" \
-        "abcb3d3bfa99297dfb92b8fb4f1f78d0948a01281fdfc76c9c460a2c3d5c7f79" \
-        "smartdns"
-}
 
 update_ath11k_fw() {
     local makefile="$BUILD_DIR/package/firmware/ath11k-firmware/Makefile"
@@ -431,8 +405,6 @@ apply_passwall_tweaks() {
 install_opkg_distfeeds() {
     local emortal_def_dir="$BUILD_DIR/package/emortal/default-settings"
     local distfeeds_conf="$emortal_def_dir/files/99-distfeeds.conf"
-    local lean_def_dir="$BUILD_DIR/package/lean/default-settings"
-    local zzz_default_settings="$lean_def_dir/files/zzz-default-settings"
 
     # 检查是否存在 emortal_def_dir 和 distfeeds_conf
     if [ -d "$emortal_def_dir" ] && [ ! -f "$distfeeds_conf" ]; then
@@ -446,19 +418,11 @@ EOF
 
         sed -i "/define Package\/default-settings\/install/a\\
 \\t\$(INSTALL_DIR) \$(1)/etc\\n\
-\t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" "$emortal_def_dir/Makefile"
+\t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" $emortal_def_dir/Makefile
 
         sed -i "/exit 0/i\\
 [ -f \'/etc/99-distfeeds.conf\' ] && mv \'/etc/99-distfeeds.conf\' \'/etc/opkg/distfeeds.conf\'\n\
-sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" "$emortal_def_dir/files/99-default-settings"
-
-    # 检查是否存在 lean_def_dir 和 zzz_default_settings
-    elif [ -d "$lean_def_dir" ] && [ -f "$zzz_default_settings" ]; then
-        # 删除指定行
-        sed -i "/sed -i '\/openwrt_luci\/ { s\/snapshots\/releases\\\\\/18.06.9\/g; }' \/etc\/opkg\/distfeeds.conf/d" "$zzz_default_settings"
-        # 替换指定行
-        sed -i "s#mirrors.tencent.com/lede#downloads.immortalwrt.org#g" "$zzz_default_settings"
-
+sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/files/99-default-settings
     fi
 }
 
@@ -876,7 +840,7 @@ remove_tweaked_packages() {
 }
 
 update_argon() {
-    local repo_url="https://github.com/jjm2473/luci-theme-argon.git"
+    local repo_url="https://github.com/huanchenshang/luci-theme-argon.git"
     local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
     local tmp_dir=$(mktemp -d)
 
@@ -903,7 +867,6 @@ main() {
     fix_default_set
     fix_miniupnpd
     update_golang
-    change_dnsmasq2full
     fix_mk_def_depends
     add_wifi_default_set
     update_default_lan_addr
@@ -938,7 +901,6 @@ main() {
     update_uwsgi_limit_as
     update_argon
     install_feeds
-    apply_hash_fixes # 调用哈希修正函数
     support_fw4_adg
     update_script_priority
     fix_easytier

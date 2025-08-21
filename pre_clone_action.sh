@@ -2,7 +2,6 @@
 
 set -e
 
-
 BASE_PATH=$(cd $(dirname $0) && pwd)
 
 Dev=$1
