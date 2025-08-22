@@ -109,7 +109,7 @@ fi
 $BASE_PATH/update.sh "$REPO_URL" "$REPO_BRANCH" "$BASE_PATH/$BUILD_DIR" "$COMMIT_HASH"
 # 复制配置文件
 \cp -f "$CONFIG_FILE" "$BASE_PATH/$BUILD_DIR/.config"
-cp -r $BASE_PATH/package/* $BASE_PATH/$BUILD_DIR/package
+cp -r $BASE_PATH/files/* $BASE_PATH/$BUILD_DIR/package
 
 cat_ebpf_config
 # 修改内核大小
