@@ -83,24 +83,20 @@ update_feeds() {
     ./scripts/feeds clean
     ./scripts/feeds update -a
 }
-
+#移除不需要的包
 remove_unwanted_packages() {
-    local luci_packages=(
-        "luci-app-passwall" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
-        "luci-app-vssr" "luci-app-alist" "luci-app-homeproxy" 
-        "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
-        "luci-app-msd_lite"
-    )
+    #local luci_packages=(
+    #    "luci-app-passwall" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
+    #    "luci-app-vssr" "luci-app-alist" "luci-app-homeproxy" 
+    #    "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
+    #    "luci-app-msd_lite"
+    #)
     local packages_net=(
-        "haproxy" "xray-core" "xray-plugin" "dns2socks" "alist" "hysteria"
-        "mosdns" "adguardhome" "ddns-go" "naiveproxy" "shadowsocks-rust"
-        "sing-box" "v2ray-core" "v2ray-geodata" "v2ray-plugin" "tuic-client"
-        "chinadns-ng" "ipt2socks" "tcping" "trojan-plus" "simple-obfs" "shadowsocksr-libev"
-        "mihomo" "geoview" "tailscale" "open-app-filter" "msd_lite"       
+		"v2ray-geodata"   
     )
-    local packages_utils=(
-        "cups"
-    )
+    #local packages_utils=(
+    #    "cups"
+    #)
     local small8_packages=(
         "ppp" "firewall" "daed-next" "libnftnl" "nftables" "dnsmasq" "luci-app-alist"
         "alist" "opkg" "smartdns" "luci-app-smartdns"
@@ -147,26 +143,21 @@ remove_unwanted_packages() {
         find "$BUILD_DIR/target/linux/qualcommax/base-files/etc/uci-defaults/" -type f -name "99*.sh" -exec rm -f {} +
     fi
 }
-
+#更新golang
 update_golang() {
     if [[ -d ./feeds/packages/lang/golang ]]; then
         \rm -rf ./feeds/packages/lang/golang
         git clone --depth 1 $GOLANG_REPO -b $GOLANG_BRANCH ./feeds/packages/lang/golang
     fi
 }
-
+#安装small8中的包
 install_small8() {
-    ./scripts/feeds install -p small8 -f xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
-        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata v2ray-geoview v2ray-plugin \
-        tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
-        luci-app-passwall v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
-        luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
-        luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
-        lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
+    ./scripts/feeds install -p small8 -f taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
+        luci-app-quickstart luci-app-istorex lucky luci-app-lucky nikki luci-app-nikki \
         tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
-        msd_lite luci-app-msd_lite cups luci-app-cupsd luci-app-unishare unishare webdav2
+        luci-app-unishare unishare webdav2
 }
-
+#安装fullconenat
 install_fullconenat() {
     if [ ! -d $BUILD_DIR/package/network/utils/fullconenat-nft ]; then
         ./scripts/feeds install -p small8 -f fullconenat-nft
@@ -175,7 +166,7 @@ install_fullconenat() {
         ./scripts/feeds install -p small8 -f fullconenat
     fi
 }
-
+#更新feeds
 install_feeds() {
     ./scripts/feeds update -i
     for dir in $BUILD_DIR/feeds/*; do
@@ -190,7 +181,7 @@ install_feeds() {
         fi
     done
 }
-
+#设置默认参数
 fix_default_set() {
     # 修改默认主题
     if [ -d "$BUILD_DIR/feeds/luci/collections/" ]; then
@@ -206,7 +197,7 @@ fix_default_set() {
         fi
     fi
 }
-
+#修复minipunpd
 fix_miniupnpd() {
     local miniupnpd_dir="$BUILD_DIR/feeds/packages/net/miniupnpd"
     local patch_file="999-chanage-default-leaseduration.patch"
@@ -223,7 +214,7 @@ fix_mk_def_depends() {
         sed -i 's/wpad-openssl/wpad-mesh-openssl/g' $BUILD_DIR/target/linux/qualcommax/Makefile
     fi
 }
-
+#wifi参数设置
 add_wifi_default_set() {
     local qualcommax_uci_dir="$BUILD_DIR/target/linux/qualcommax/base-files/etc/uci-defaults"
     local filogic_uci_dir="$BUILD_DIR/target/linux/mediatek/filogic/base-files/etc/uci-defaults"
@@ -234,14 +225,14 @@ add_wifi_default_set() {
         install -Dm755 "$BASE_PATH/patches/992_set-wifi-uci.sh" "$filogic_uci_dir/992_set-wifi-uci.sh"
     fi
 }
-
+#修改默认ip
 update_default_lan_addr() {
     local CFG_PATH="$BUILD_DIR/package/base-files/files/bin/config_generate"
     if [ -f $CFG_PATH ]; then
         sed -i 's/192\.168\.[0-9]*\.[0-9]*/'$LAN_ADDR'/g' $CFG_PATH
     fi
 }
-
+#移除nss模块
 remove_something_nss_kmod() {
     local ipq_mk_path="$BUILD_DIR/target/linux/qualcommax/Makefile"
     local target_mks=("$BUILD_DIR/target/linux/qualcommax/ipq60xx/target.mk" "$BUILD_DIR/target/linux/qualcommax/ipq807x/target.mk")
@@ -387,21 +378,7 @@ EOF
     chmod +x "$sh_dir/custom_task"
 }
 
-# 应用 Passwall 相关调整
-apply_passwall_tweaks() {
-    # 清理 Passwall 的 chnlist 规则文件
-    local chnlist_path="$BUILD_DIR/feeds/small8/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
-    if [ -f "$chnlist_path" ]; then
-        > "$chnlist_path"
-    fi
-
-    # 调整 Xray 最大 RTT
-    local xray_util_path="$BUILD_DIR/feeds/small8/luci-app-passwall/luasrc/passwall/util_xray.lua"
-    if [ -f "$xray_util_path" ]; then
-        sed -i 's/maxRTT = "1s"/maxRTT = "2s"/g' "$xray_util_path"
-    fi
-}
-
+#添加ipk源
 install_opkg_distfeeds() {
     local emortal_def_dir="$BUILD_DIR/package/emortal/default-settings"
     local distfeeds_conf="$emortal_def_dir/files/99-distfeeds.conf"
@@ -433,11 +410,11 @@ update_nss_pbuf_performance() {
         sed -i "s/scaling_governor 'performance'/scaling_governor 'schedutil'/g" $pbuf_path
     fi
 }
-
+#添加构建者标签
 set_build_signature() {
     local file="$BUILD_DIR/feeds/luci/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js"
     if [ -d "$(dirname "$file")" ] && [ -f $file ]; then
-        sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ build by ZqinKing')/g" "$file"
+        sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ build by mutou')/g" "$file"
     fi
 }
 
@@ -448,7 +425,7 @@ update_nss_diag() {
         install -Dm755 "$BASE_PATH/patches/nss_diag.sh" "$file"
     fi
 }
-
+#修改菜单位置
 update_menu_location() {
     # local samba4_path="$BUILD_DIR/feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/luci-app-samba4.json"
     # if [ -d "$(dirname "$samba4_path")" ] && [ -f "$samba4_path" ]; then
@@ -469,16 +446,6 @@ fix_compile_coremark() {
     local file="$BUILD_DIR/feeds/packages/utils/coremark/Makefile"
     if [ -d "$(dirname "$file")" ] && [ -f "$file" ]; then
         sed -i 's/mkdir \$/mkdir -p \$/g' "$file"
-    fi
-}
-
-update_homeproxy() {
-    local repo_url="https://github.com/immortalwrt/homeproxy.git"
-    local target_dir="$BUILD_DIR/feeds/small8/luci-app-homeproxy"
-
-    if [ -d "$target_dir" ]; then
-        rm -rf "$target_dir"
-        git clone --depth 1 "$repo_url" "$target_dir"
     fi
 }
 
@@ -710,23 +677,6 @@ update_smartdns() {
     git clone --depth=1 "$LUCI_APP_SMARTDNS_REPO" "$LUCI_APP_SMARTDNS_DIR"
 }
 
-# 自定义v2ray-geodata下载
-custom_v2ray_geodata() {
-    local file_path="$BUILD_DIR/feeds/small8/v2ray-geodata"
-    # 下载新的Makefile文件并覆盖
-    if [ -d "$file_path" ]; then
-        \rm -f "$file_path/Makefile"
-        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/Makefile \
-            -o "$file_path/Makefile"
-        # 下载init.sh文件
-        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/init.sh \
-            -o "$file_path/init.sh"
-        # 下载v2ray-geodata-updater文件
-        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/v2ray-geodata-updater \
-            -o "$file_path/v2ray-geodata-updater"
-    fi
-}
-
 update_diskman() {
     local path="$BUILD_DIR/feeds/luci/applications/luci-app-diskman"
     if [ -d "$path" ]; then
@@ -869,6 +819,41 @@ else
     echo "错误：修改automount和ntfs中文失败"
 fi
 
+#修改菜单名称显示
+update_menu_name(){
+	local cpu_path="$BUILD_DIR/feeds/luci/applications/luci-app-cpufreq"
+	local po_file="$cpu_path/po/zh_Hans/cpufreq.po"
+	local argon_path="$BUILD_DIR/feeds/luci/applications/luci-app-argon-config"
+	local argonpo_file="$argon_path/po/zh_Hans/argon-config.po"
+	if [ -d "$cpu_path" ] && [ -f "$po_file" ]; then
+    	sed -i 's/msgstr "CPU 性能优化调节"/msgstr "性能调节"/g' "$po_file"
+    	echo "cpu调节更名成功"
+	else
+    	echo "cpufreq.po文件未找到"
+	fi
+	if [ -d "$argon_path" ] && [ -f "$argonpo_file" ]; then
+    	sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/g' "$argonpo_file"
+    	echo "主题设置更名成功"
+	else
+    	echo "argon-config.po文件没有找到"
+	fi
+}
+
+#修改argon背景图片
+update_argon_bg(){
+	local theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+	local source_path="$BASE_PATH/images"
+	local source_file="$source_path/bg1.jpg"
+	local target_file="$theme_path/bg1.jpg"
+
+	if [ -f "$source_file" ]; then
+    	cp -f "$source_file" "$target_file"
+    	echo "背景图片更新成功"
+	else
+    	echo "错误：未找到源图片文件"
+	fi
+}
+
 main() {
     clone_repo
     clean_up
@@ -876,7 +861,6 @@ main() {
     update_feeds
     remove_unwanted_packages
     remove_tweaked_packages
-    update_homeproxy
     fix_default_set
     fix_miniupnpd
     update_golang
@@ -891,7 +875,6 @@ main() {
     update_tcping
     add_ax6600_led
     set_custom_task
-    apply_passwall_tweaks
     install_opkg_distfeeds
     update_nss_pbuf_performance
     set_build_signature
@@ -913,15 +896,16 @@ main() {
     set_nginx_default_config
     update_uwsgi_limit_as
     update_argon
+	update_menu_name
+ 	update_argon_bg
     install_feeds
-    support_fw4_adg
+    #support_fw4_adg
     update_script_priority
     fix_easytier
-    custom_v2ray_geodata
-    update_package "runc" "releases" "v1.2.6"
-    update_package "containerd" "releases" "v1.7.27"
-    update_package "docker" "tags" "v28.2.2"
-    update_package "dockerd" "releases" "v28.2.2"
+    #update_package "runc" "releases" "v1.2.6"
+    #update_package "containerd" "releases" "v1.7.27"
+    #update_package "docker" "tags" "v28.2.2"
+    #update_package "dockerd" "releases" "v28.2.2"
 }
 
 main "$@"
