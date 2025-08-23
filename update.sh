@@ -85,13 +85,13 @@ update_feeds() {
 }
 #移除不需要的包
 remove_unwanted_packages() {
-    #local luci_packages=(
+    local luci_packages=(
 	     "luci-app-tailscale"
     #    "luci-app-passwall" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
     #    "luci-app-vssr" "luci-app-alist" "luci-app-homeproxy" 
     #    "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
     #    "luci-app-msd_lite"
-    #)
+    )
     local packages_net=(
 		"v2ray-geodata" "tailscale"  
     )
@@ -156,7 +156,7 @@ install_small8() {
     ./scripts/feeds install -p small8 -f taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
         luci-app-quickstart luci-app-istorex lucky luci-app-lucky nikki luci-app-nikki \
         tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
-        luci-app-unishare unishare webdav2
+        luci-app-unishare unishare webdav2 luci-app-momo momo
 }
 #安装fullconenat
 install_fullconenat() {
