@@ -3,7 +3,7 @@ run-name: Release - ${{ inputs.model }}
 
 on:
   schedule:
-    - cron: 0 22 * * 5
+    - cron: 0 22 * * *
   workflow_dispatch:
     inputs:
       model:
