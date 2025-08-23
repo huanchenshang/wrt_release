@@ -86,13 +86,14 @@ update_feeds() {
 #移除不需要的包
 remove_unwanted_packages() {
     #local luci_packages=(
+	     "luci-app-tailscale"
     #    "luci-app-passwall" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
     #    "luci-app-vssr" "luci-app-alist" "luci-app-homeproxy" 
     #    "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
     #    "luci-app-msd_lite"
     #)
     local packages_net=(
-		"v2ray-geodata"   
+		"v2ray-geodata" "tailscale"  
     )
     #local packages_utils=(
     #    "cups"
