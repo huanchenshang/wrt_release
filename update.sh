@@ -855,6 +855,20 @@ update_argon_bg(){
 	fi
 }
 
+#修改automount自动加载和修复ntfs硬盘显示中文
+fix_ntfs(){
+	local fstools_path="$BUILD_DIR/package/system/fstools/patches"
+	local automount_file="$BASE_PATH/files/0100-automount.patch"
+	local ntfs_file="$BASE_PATH/files/0200-ntfs3-with-utf8.patch"
+
+	if [ -d "$fstools_path" ]; then
+    	cp -f "$automount_file" "$fstools_path"
+		cp -f "$ntfs_file" "$fstools_path"
+    	echo "修改automount自动加载和修复ntfs硬盘显示中文成功"
+	else
+    	echo "错误：修改automount和ntfs中文失败"
+	fi
+}
 main() {
     clone_repo
     clean_up
@@ -903,6 +917,7 @@ main() {
     #support_fw4_adg
     update_script_priority
     fix_easytier
+	fix_ntfs
     #update_package "runc" "releases" "v1.2.6"
     #update_package "containerd" "releases" "v1.7.27"
     #update_package "docker" "tags" "v28.2.2"
