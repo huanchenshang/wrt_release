@@ -807,19 +807,6 @@ update_argon() {
     echo "Argon 更新完毕。"
 }
 
-#修改automount自动加载和修复ntfs硬盘显示中文
-fstools_path="$BUILD_DIR/package/system/fstools/patches"
-automount_file="$BASE_PATH/patches/0100-automount.patch"
-ntfs_file="$BASE_PATH/patches/0200-ntfs3-with-utf8.patch"
-
-if [ -d "$fstools_path" ]; then
-    cp -f "$automount_file" "$fstools_path"
-	cp -f "$ntfs_file" "$fstools_path"
-    echo "修改automount自动加载和修复ntfs硬盘显示中文成功"
-else
-    echo "错误：修改automount和ntfs中文失败"
-fi
-
 #修改菜单名称显示
 update_menu_name(){
 	local cpu_path="$BUILD_DIR/feeds/luci/applications/luci-app-cpufreq"
@@ -842,7 +829,7 @@ update_menu_name(){
 
 #修改argon背景图片
 update_argon_bg(){
-	local theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+	local theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/img"
 	local source_path="$BASE_PATH/images"
 	local source_file="$source_path/bg1.jpg"
 	local target_file="$theme_path/bg1.jpg"
