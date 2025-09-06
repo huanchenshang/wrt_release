@@ -12,11 +12,7 @@ on:
         options:
           - jdcloud_ipq60xx_immwrt
           - jdcloud_ipq60xx_libwrt
-  schedule:
-    - cron: 0 6 * * *
-
-permissions: write-all
-
+          
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
