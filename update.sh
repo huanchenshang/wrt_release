@@ -27,8 +27,11 @@ LAN_ADDR="192.168.10.1"
 
 clone_repo() {
     if [[ ! -d $BUILD_DIR ]]; then
-        echo $REPO_URL $REPO_BRANCH
-        git clone --depth 1 -b $REPO_BRANCH $REPO_URL $BUILD_DIR
+        echo "克隆仓库: $REPO_URL 分支: $REPO_BRANCH"
+        if ! git clone --depth 1 -b $REPO_BRANCH $REPO_URL $BUILD_DIR; then
+            echo "错误：克隆仓库 $REPO_URL 失败" >&2
+            exit 1
+        fi
     fi
 }
 
@@ -415,7 +418,7 @@ update_nss_pbuf_performance() {
 set_build_signature() {
     local file="$BUILD_DIR/feeds/luci/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js"
     if [ -d "$(dirname "$file")" ] && [ -f $file ]; then
-        sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ build by mutou')/g" "$file"
+        sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ build by shawn')/g" "$file"
     fi
 }
 
@@ -791,7 +794,7 @@ remove_tweaked_packages() {
 }
 
 update_argon() {
-    local repo_url="https://github.com/huanchenshang/luci-theme-argon.git"
+    local repo_url="https://github.com/ZqinKing/luci-theme-argon.git"
     local dst_theme_path="$BUILD_DIR/feeds/luci/themes/luci-theme-argon"
     local tmp_dir=$(mktemp -d)
 
